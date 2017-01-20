@@ -1,0 +1,869 @@
+---
+title: |
+  | [MVA]
+  | Probabilistic graphical models
+  | Homework 1  
+author: "Maha ELBAYAD"
+date: "22 octobre 2015"
+header-includes:
+   - \usepackage{multicol}
+   - \newcommand{\bcol}{\begin{multicols}{2}}
+   - \newcommand{\ecol}{\end{multicols}}
+   - \newcommand{\1}{\mathbb{I}}
+   - \newcommand{\R}{\mathbb{R}}
+   - \newcommand{\0}{\mathbf{0}}
+   - \newcommand{\p}{\mathbb{P}}
+
+output:
+  pdf_document:
+    highlight: pygments
+---
+
+```{r, echo=F,include=FALSE}
+library(mixtools)
+library(MASS)
+library(pander)
+library(knitr)
+library(conics)
+
+
+#Reading the data:
+data=read.table("data/classificationA.train",header=F,sep='\t');
+X.A=cbind(data$V1,data$V2)
+Y.A=as.matrix(data$V3)
+data=read.table("data/classificationB.train",header=F,sep='\t');
+X.B=cbind(data$V1,data$V2)
+Y.B=as.matrix(data$V3)
+data=read.table("data/classificationC.train",header=F,sep='\t');
+X.C=cbind(data$V1,data$V2)
+Y.C=as.matrix(data$V3)
+```
+
+#Learning in discrete graphical models:
+
+Consider two discrete r.v $z$ and $x$ taking respectively $M$ and $K$ different values with $\p(z=m)=\pi_m$ and $\p(x=k|z=m)=\theta_{mk}$.
+
+**Maximum likelihood estimation of $\pi$ and $\theta$:**
+
+Let $\mathcal D=\{(x_i,z_i)\}_{1\leq i\leq n}$ be an i.i.d sample of observations.
+
+Our objective is to maximize $\p(\mathcal D|\theta,\pi)$. We have:
+\[\p(\mathcal D|\theta,\pi)=\prod\limits_{i=1}^n\p(x_i,z_i|\theta,\pi)=\prod\limits_{i=1}^n\p(x_i|z_i,\theta,\pi).\p(z_i|\theta,\pi)=\prod\limits_{i=1}^n\theta_{z_ix_i}\pi_{z_i}\]
+Let us introduce $\eta_m=\sum_{i=1}^n\1(z_i=m)$ and $\xi_{mk}=\sum_{i=1}^n\1(z_i=k,x_i=k)$.
+
+It follows that $\sum_{k=1}^K\xi_{mk}=\eta_m\:(m=1,..,M)$ and $\sum_{m=1}^M\eta_m=n$.
+
+Thus, we can rewrite our optimization problem as:
+\begin{equation*}
+\begin{aligned}
+&{\text{maximize}} & & l(\theta,\pi)=\sum\limits_{m=1}^M\left[\eta_m\log\pi_m+\sum_{k=1}^K\xi_{mk}\log\theta_{mk}\right]\\
+& \text{subject to} & & \sum_{m=1}^M\pi_m=1\\
+& & & \sum_{k=1}^K\theta_{mk}=1\:(m=1,..,M)
+\end{aligned}
+\end{equation*}
+The corresponding Lagrangian is:
+\[L(\theta,\pi,\mu,\lambda_1,...\lambda_M)=\sum\limits_{m=1}^M\left[\eta_m\log\pi_m+\sum_{k=1}^K\xi_{mk}\log\theta_{mk}\right]+\mu\left(1-\sum_{m=1}^M\pi_m-1\right)+\sum_{m=1}^M\lambda_m\left(\sum_{k=1}^K\theta_{mk}-1\right)\]
+We set the gradient with respect to $\pi$ and $\theta$ to $0$:
+\[\frac{\partial L(...)}{\partial \pi_m}=\frac{\eta_m}{\pi_m}-\mu=0\phantom{abc}m=1,...,M\]
+And:
+\[\frac{\partial L(...)}{\partial \theta_{mk}}=\frac{\xi_{mk}}{\theta_{mk}}-\lambda_m=0\]
+Using the optimization constraints and the conditions on $\eta$ and $\xi$ we find:
+\[\mu=n,\:\lambda_m=\eta_m\text{ and }\pi^*_m=\dfrac{\eta_m}{n}\:\theta^*_{mk}=\dfrac{\xi_{mk}}{\eta_m}\]
+
+#Linear classification:
+##Generative model (LDA):
+###(a) Maximum likelihood:
+Let us consider an i.i.d sample of observations $\mathcal D=\{(x_i,y_i)\}_{1\leq i\leq n}$ where $x_i\in\R^2$ and $y_i\in\{0,1\}$.
+
+Suppose\[y\sim Bernoulli(\alpha)\phantom{abc}x|\{y=i\}\sim \mathcal N(\mu_i,\Sigma)\]
+\[\p(\mathcal D|\alpha,\mu_0,\mu_1,\Sigma)=\prod\limits_{i=1}^n\alpha^{y_i}(1-\alpha)^{1-y_i}f_0(x_i)^{1-y_i}f_1(x_i)^{y_i}\]
+Where \[f_i(x)=\frac{1}{2\pi\sqrt{det\Sigma}}\exp\left(-\frac{1}{2}(x-\mu_i)^T\Sigma^{-1}(x-\mu_i)\right)\]
+Hence the log-likelihood is:
+\[
+\begin{split}
+l(\alpha,\mu_0,\mu_1,\Sigma)&=\sum_{i=1}^n\biggl[y_i\log\alpha+(1-y_i)\log(1-\alpha)\\
+&+(1-y_i)\left(-log(2\pi)-\frac{1}{2}\log det\Sigma-\frac{1}{2}(x_i-\mu_0)^T\Sigma^{-1}(x_i-\mu_0)\right)\\
+&+y_i\left(-log(2\pi)-\frac{1}{2}\log det\Sigma-\frac{1}{2}(x_i-\mu_1)^T\Sigma^{-1}(x_i-\mu_1)\right)\biggr]
+\end{split}
+\]
+we set the gradients to 0 for $\alpha,\mu_0$ and $\mu_1$:
+\[\frac{\partial l}{\partial \alpha}(..)=\sum_{i=1}^n[\frac{y_i}{\alpha}-\frac{1-y_i}{1-\alpha}]=0\]
+thus: $\alpha^*=\dfrac{1}{n}\sum\limits_{i=1}^ny_i$
+\[\frac{\partial l}{\partial \mu_0}(..)=-\frac{1}{2}\Sigma^{-1}\left(\sum_{i=1}^n(1-y_i)(x_i-\mu_0)\right)=\0\]
+thus $\mu_0^*=\dfrac{\sum_{i=1}^n(1-y_i)x_i}{\sum_{i=1}^n(1-y_i)}$
+
+And similarly $\mu_1^*=\dfrac{\sum_{i=1}^ny_ix_i}{\sum_{i=1}^ny_i}$
+
+Finally for $\Sigma$, we introduce $A=\Sigma^{-1}$
+\[
+\begin{split}
+\frac{\partial l}{\partial A}(..)&=\frac{\partial}{\partial A}\biggl(\sum_{i=1}^n\frac{1-y_i}{2}(\log det A-Tr((x_i-\mu_0)^TA(x_i-\mu_0)))\\
+&\phantom{abc}+\frac{y_i}{2}(\log det A-Tr((x_i-\mu_1)^TA(x_i-\mu_1)))\biggr)\\
+&=\sum_{i=1}^n\frac{1-y_i}{2}(A^{-1}-(x_i-\mu_0)(x_i-\mu_0)^T)+\frac{y_i}{2}(A^{-1}-(x_i-\mu_1)(x_i-\mu_1)^T)\\
+&=\frac{n}{2}A^{-1}-\frac{n}{2}\bar\Sigma_0-\frac{n}{2}\bar\Sigma_1
+\end{split}
+\]
+Where \[\bar\Sigma_0=\frac{1}{n}\sum_{i=1}^n(1-y_i)(x_i-\mu_0)(x_i-\mu_0)^T\]
+and:
+\[\bar\Sigma_1=\frac{1}{n}\sum_{i=1}^ny_i(x_i-\mu_1)(x_i-\mu_1)^T\]
+Thus
+\[\Sigma^*=\bar\Sigma_0+\bar\Sigma_1\]
+
+###(b):
+
+Using Bayes'rule:
+\[\begin{split}
+\p(Y=1|X=x)&=\frac{\p(X=x|Y=1)\p(Y=1)}{\p(X=x|Y=1)\p(Y=1)+\p(X=x|Y=0)\p(Y=0)}\\
+&=\frac{1}{1+\frac{(1-\alpha)f_0(x)}{\alpha f_1(x)}}
+\end{split}\]
+Given that:
+\[\begin{split}
+\frac{\p(Y=1|X=x)}{\p(Y=0|X=x)}&=\frac{\alpha f_1(x)}{(1-\alpha)f_0(x)}\\
+&=\exp\left((\Sigma^{-1}(\mu_1-\mu_0))^Tx+\log\frac{\alpha}{1-\alpha}-\frac{1}{2}(\mu_1^T\Sigma^{-1}\mu_1-\mu_0^T\Sigma^{-1}\mu_0)\right)\\
+&=\exp(\omega^Tx+b)
+\end{split}\]
+with:
+\[\omega=\Sigma^{-1}(\mu_1-\mu_0),\phantom{abc}b=\log\frac{\alpha}{1-\alpha}-\frac{1}{2}(\mu_1+\mu_0)^T\Sigma^{-1}(\mu_1-\mu_0)\]
+We end up with an expression similar to the logistic regression with an explicit intercept $b$.
+\[\p(Y=1|X=x)=\frac{1}{1+\exp(-(\omega^Tx+b))}=\sigma(\omega^Tx+b)\]
+Our decision boundary would be $\p(Y=1|x)=.5$ which is equivalent to $w^Tx+b=0$
+
+###(c):
+
+We implement the model above on a sample (X,Y):
+
+```{r}
+MLE.LDA<-function(X,Y){
+  alpha=mean(Y)
+  mu1=colSums(X[Y==1,])/sum(Y)
+  mu0=colSums(X[Y==0,])/sum(1-Y)
+  sigma.0=(t(X[Y==0,]-mu0)%*%(X[Y==0,]-mu0))/length(Y)
+  sigma.1=(t(X[Y==1,]-mu1)%*%(X[Y==1,]-mu1))/length(Y)
+  sigma=sigma.0+sigma.1
+  A=solve(sigma)
+  w=A%*%(mu1-mu0)
+  b=log(alpha/(1-alpha))+1/2*t(mu0+mu1)%*%A%*%(mu1-mu0)
+  predict<-function(x){(t(w)%*%x+b>=0)+0}
+  list(alpha=alpha,mu1=mu1,mu0=mu0,sigma=sigma,w=w,b=b,predict=predict)
+}
+```
+
+###Estimated gaussian distributions and decision boundaries on the training sets A,B and C:
+
+```{r,echo=FALSE,fig.height=10}
+par(mfrow=c(3,1))
+LDA.A=MLE.LDA(X.A,Y.A)
+plot(X.A,col=c('blue4','salmon')[Y.A+1],pch=19,cex=.6,ylim=range(X.A[,2])+c(-1,1),xlab='X1',ylab='X2',main="Sample A\nLDA")
+abline(a=-LDA.A$b/LDA.A$w[2],b=-LDA.A$w[1]/LDA.A$w[2],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+points(t(LDA.A$mu1),pch=4,lwd=3)
+points(t(LDA.A$mu0),pch=4,lwd=3)
+for(o in c(.5,.7,.9)){
+temp=ellipse(mu=LDA.A$mu0, sigma=LDA.A$sigma,alpha=o,col="gray",pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+temp=ellipse(mu=LDA.A$mu1,sigma=LDA.A$sigma,alpha=o,col='gray',pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+}
+
+
+LDA.B=MLE.LDA(X.B,Y.B)
+plot(X.B,col=c('blue4','salmon')[Y.B+1],pch=19,cex=.6,ylim=range(X.B[,2])+c(-1,1),xlab='X1',ylab='X2',main="Sample B\nLDA")
+abline(a=-LDA.B$b/LDA.B$w[2],b=-LDA.B$w[1]/LDA.B$w[2],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+points(t(LDA.B$mu1),pch=4,lwd=3)
+points(t(LDA.B$mu0),pch=4,lwd=3)
+for(o in c(.5,.7,.9)){
+temp=ellipse(mu=LDA.B$mu0, sigma=LDA.B$sigma,alpha=o,col="gray",pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+temp=ellipse(mu=LDA.B$mu1,sigma=LDA.B$sigma,alpha=o,col='gray',pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+}
+
+
+LDA.C=MLE.LDA(X.C,Y.C)
+plot(X.C,col=c('blue4','salmon')[Y.C+1],pch=19,cex=.6,xlab='X1',ylab='X2',main="Sample C\nLDA",ylim=range(X.C[,2])+c(-1,1))
+abline(a=-LDA.C$b/LDA.C$w[2],b=-LDA.C$w[1]/LDA.C$w[2],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+points(t(LDA.C$mu1),pch=4,lwd=3)
+points(t(LDA.C$mu0),pch=4,lwd=3)
+for(o in c(.5,.7,.9)){
+temp=ellipse(mu=LDA.C$mu0, sigma=LDA.C$sigma,alpha=o,col="gray",pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+temp=ellipse(mu=LDA.C$mu1,sigma=LDA.C$sigma,alpha=o,col='gray',pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+}
+
+```
+
+###The estimated parameters:
+
+```{r, echo=F, results='asis'}
+pandoc.table(as.data.frame(LDA.A[1:6]),caption = 'LDA - sample A',round=2,style='rmarkdown')
+pandoc.table(as.data.frame(LDA.B[1:6]),caption = 'LDA - sample B',round=2,style='rmarkdown')
+pandoc.table(as.data.frame(LDA.C[1:6]),caption = 'LDA - sample C',round=2,style='rmarkdown')
+```
+
+##Logistic regression:
+
+We will implement the logistic regression model with the assumption:
+\[\log\frac{\p(Y=1|X=x)}{\p(Y=0|X=x)}=f(x)=w^Tx\]
+Where the intercept $w_0$ is included in $w$ by adding adding a column of ones to the design matrix $X$.
+
+We have established in the course that:
+\[l(w)=\sum_{i=1}^ny_iw^Tx_i+\log\sigma(-w^Tx_i)\]
+Thus:
+\[\nabla_wl(w)=\sum_{i=1}^n(y_i-\eta_i)x_i\]
+with $\eta_i=\sigma(w^Tx_i)$
+\[Hl(w)=-X^TD_{\eta}X\]
+with $D_{\eta}=Diag(\eta_i(1-\eta_i))$.
+
+The Newton-Raphson method consists of updating $w$ as follows:
+\[ w^{(new)}=w^{(old)}+\left(X^TD_{\eta^{(old)}}X\right)^{-1}X^T(Y-\eta^{(old)})\]
+assuming $X^TD_{\eta}X$ is invertible.
+
+The descision boundary defined as $\p(Y=1|x)=.5$ is equivalent to $w^Tx=0$
+```{r}
+sigmoid<- function(x){1/(1+exp(-x))}
+p<-function(x,w){sigmoid(apply(x,1,function(u){t(u)%*%w}))}
+grad = function(x,y,w){-t(x)%*%(y-p(x,w))}
+hess = function(x,y,w){
+  t(x)%*% diag(p(x,w)*(1-p(x,w))) %*%x
+}
+
+NR.Logit<-function(X,Y,max_iter=1000,tol=1e-7){
+  X=cbind(1,X)
+  #Initialize w:
+  #w=rnorm(dim(X)[2])
+  w=numeric(ncol(X))
+  flag=T
+  iter=1
+  while(iter<max_iter & flag){
+    w.old=w
+    w=w.old-ginv(hess(X,Y,w.old))%*%grad(X,Y,w.old)
+    norm(w-w.old,'2')
+    flag =norm(w-w.old,'2') > tol
+    iter=iter+1
+  }
+  predict<-function(x){(t(w)%*%c(1,x)>=0)+0}
+  list(w=w,iter=iter,cvg=iter<max_iter,predict=predict)
+}
+```
+
+###Estimated decision boundaries on the training sets A,B and C:
+
+
+```{r,echo=FALSE,fig.height=10,warning=T}
+par(mfrow=c(3,1))
+Logit.A=NR.Logit(X.A,Y.A)
+if(Logit.A$cvg){
+  title=paste("Sample A (converged after",Logit.A$iter,'iterations)\nLogistic regression')
+}else{
+  title=paste('Sample A (Newton-Raphson didn\'t converge)\nLogitsic regression')
+}
+plot(X.A,col=c('blue4','salmon')[Y.A+1],pch=19,cex=.6,ylim=range(X.A[,2])+c(-1,1),xlab='X1',ylab='X2',main=title)
+abline(a=-Logit.A$w[1]/Logit.A$w[3],b=-Logit.A$w[2]/Logit.A$w[3],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+
+
+Logit.B=NR.Logit(X.B,Y.B)
+if(Logit.B$cvg){
+  title=paste("Sample B (converged after",Logit.B$iter,'iterations)\nLogistic regression')
+}else{
+  title=paste('Sample B (Newton-Raphson didn\'t converge)\nLogistic regression')
+  }
+plot(X.B,col=c('blue4','salmon')[Y.B+1],pch=19,cex=.6,ylim=range(X.B[,2])+c(-1,1),xlab='X1',ylab='X2',main=title)
+abline(a=-Logit.B$w[1]/Logit.B$w[3],b=-Logit.B$w[2]/Logit.B$w[3],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+
+Logit.C=NR.Logit(X.C,Y.C)
+if(Logit.C$cvg){
+  title=paste("Sample C (converged after",Logit.C$iter,'iterations)\nLogistic regression')
+}else{
+  title=paste('Sample C (Newton-Raphson didn\'t converge)\nLogistic regression')
+  }
+plot(X.C,col=c('blue4','salmon')[Y.C+1],pch=19,cex=.6,ylim=range(X.C[,2])+c(-1,1),xlab='X1',ylab='X2',main=title)
+abline(a=-Logit.C$w[1]/Logit.C$w[3],b=-Logit.C$w[2]/Logit.C$w[3],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+
+```
+
+
+###The estimated parameters:
+```{r, echo=F, results='asis'}
+pandoc.table(as.data.frame(Logit.A[1:3]),caption="Logit - sample A",round=2,style='rmarkdown',latex.environments=NULL)
+pandoc.table(as.data.frame(Logit.B[1:3]),caption="Logit - sample B",round=2,style='rmarkdown',latex.environments=NULL)
+pandoc.table(as.data.frame(Logit.C[1:3]),caption="Logit - sample C",round=2,style='rmarkdown',latex.environments=NULL)
+```
+
+##Linear regression:
+For the affine model $y=w^Tx+b$ or $y=w^Tx$ after offset reparametrization.
+
+The solution to the normal equations is:
+\[w^*=(X^TX)^{-1}X^TY\]
+and the noise variance:
+\[\hat\sigma^2=\frac{1}{n}(Y-Xw^*)^T(Y-Xw^*)\]
+The decision boundary $\p(Y=1|x)=.5$ is equivalent to:
+\[\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{1}{2}\frac{(1-w^Tx)^2}{\sigma^2}\right)=.5\]
+\[w^Tx+\sqrt{\sigma^2\log(\frac{2}{\pi\sigma^2})}-1=0\]
+```{r}
+LR<- function(X,Y){
+  X=cbind(1,X)
+  w=ginv(t(X)%*%X)%*%t(X)%*%Y
+  sigma=mean((Y-X%*%w)^2)
+  #the extra intercept:
+  alpha=sqrt(sigma*log(2/pi/sigma))-1
+  predict<-function(x){(t(w)%*%c(1,x)+alpha>=0)+0}
+  list(w=w,sigma=sqrt(sigma),alpha=alpha,predict=predict)
+}
+```
+
+###The estimated parameters:
+```{r,echo=F}
+LR.A=LR(X.A,Y.A)
+LR.B=LR(X.B,Y.B)
+LR.C=LR(X.C,Y.C)
+```
+
+```{r,echo=F, results='asis'}
+pandoc.table(as.data.frame(LR.A[1:3]),caption="LR - sample A",round=2,style='rmarkdown')
+pandoc.table(as.data.frame(LR.B[1:3]),caption="LR - sample B",round=2,style='rmarkdown')
+pandoc.table(as.data.frame(LR.C[1:3]),caption="LR - sample C",round=2,style='rmarkdown')
+```
+
+###Estimated decision boundaries on the training sets A,B and C:
+
+```{r,echo=FALSE,fig.height=10}
+par(mfrow=c(3,1))
+plot(X.A,col=c('blue4','salmon')[Y.A+1],pch=19,cex=.6,ylim=range(X.A[,2])+c(-1,1),xlab='X1',ylab='X2',main="Sample A\nLR")
+abline(a=(-LR.A$alpha-LR.A$w[1])/LR.A$w[3],b=-LR.A$w[2]/LR.A$w[3],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+
+
+plot(X.B,col=c('blue4','salmon')[Y.B+1],pch=19,cex=.6,ylim=range(X.B[,2])+c(-1,1),xlab='X1',ylab='X2',main="Sample B\nLR")
+abline(a=(-LR.B$alpha-LR.B$w[1])/LR.B$w[3],b=-LR.B$w[2]/LR.B$w[3],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+
+
+plot(X.C,col=c('blue4','salmon')[Y.C+1],pch=19,cex=.6,xlab='X1',ylab='X2',main="Sample C\nLR",ylim=range(X.C[,2])+c(-1,1))
+abline(a=(-LR.C$alpha-LR.C$w[1])/LR.C$w[3],b=-LR.C$w[2]/LR.C$w[3],col='darkgreen', lwd=2,lty=2)
+legend("bottomleft",legend=c("class 0","class 1","DB"),col=c("blue4","salmon",'darkgreen', lwd=2),pch=c(19,19,NaN),lty=c(NaN,NaN,2))
+
+```
+
+```{r, echo=F,include=FALSE}
+
+#Reading the test data:
+data=read.table("data/classificationA.test",header=F,sep='\t');
+X.AT=cbind(data$V1,data$V2)
+Y.AT=as.matrix(data$V3)
+data=read.table("data/classificationB.test",header=F,sep='\t');
+X.BT=cbind(data$V1,data$V2)
+Y.BT=as.matrix(data$V3)
+data=read.table("data/classificationC.test",header=F,sep='\t');
+X.CT=cbind(data$V1,data$V2)
+Y.CT=as.matrix(data$V3)
+
+#Confusion matrix and misclassification error:
+CM<- function(Pred,Y){
+  CMatrix=ftable(pred=Pred, true=Y)
+  Misclass=(CMatrix[1,2]+CMatrix[2,1])/sum(CMatrix)
+  list(C=CMatrix, Error=round(Misclass*100,3))
+}
+```
+
+##Models' performance:
+\bcol
+```{r}
+#LDA - A
+##Train:
+LDA.A.Train=apply(X.A,1,LDA.A$predict)
+Confusion.LDA.A.Train=CM(LDA.A.Train,Y.A)
+##Test:
+LDA.A.Test=apply(X.AT,1,LDA.A$predict)
+Confusion.LDA.A.Test=CM(LDA.A.Test,Y.AT)
+
+#Confusion matrices:
+Confusion.LDA.A.Train$C
+Confusion.LDA.A.Test$C
+
+#LDA - B
+##Train:
+LDA.B.Train=apply(X.B,1,LDA.B$predict)
+Confusion.LDA.B.Train=CM(LDA.B.Train,Y.B)
+##Test:
+LDA.B.Test=apply(X.BT,1,LDA.B$predict)
+Confusion.LDA.B.Test=CM(LDA.B.Test,Y.BT)
+
+#Confusion matrices:
+Confusion.LDA.B.Train$C
+Confusion.LDA.B.Test$C
+
+#LDA - C
+##Train:
+LDA.C.Train=apply(X.C,1,LDA.C$predict)
+Confusion.LDA.C.Train=CM(LDA.C.Train,Y.C)
+##Test:
+LDA.C.Test=apply(X.CT,1,LDA.C$predict)
+Confusion.LDA.C.Test=CM(LDA.C.Test,Y.CT)
+
+#Confusion matrices:
+Confusion.LDA.C.Train$C
+Confusion.LDA.C.Test$C
+
+#Logit - A
+##Train:
+Logit.A.Train=apply(X.A,1,Logit.A$predict)
+Confusion.Logit.A.Train=CM(Logit.A.Train,Y.A)
+##Test:
+Logit.A.Test=apply(X.AT,1,Logit.A$predict)
+Confusion.Logit.A.Test=CM(Logit.A.Test,Y.AT)
+
+#Confusion matrices:
+Confusion.Logit.A.Train$C
+Confusion.Logit.A.Test$C
+
+#Logit - B
+##Train:
+Logit.B.Train=apply(X.B,1,Logit.B$predict)
+Confusion.Logit.B.Train=CM(Logit.B.Train,Y.B)
+##Test:
+Logit.B.Test=apply(X.BT,1,Logit.B$predict)
+Confusion.Logit.B.Test=CM(Logit.B.Test,Y.BT)
+
+#Confusion matrices:
+Confusion.Logit.B.Train$C
+Confusion.Logit.B.Test$C
+
+#Logit - C
+##Train:
+Logit.C.Train=apply(X.C,1,Logit.C$predict)
+Confusion.Logit.C.Train=CM(Logit.C.Train,Y.C)
+##Test:
+Logit.C.Test=apply(X.CT,1,Logit.C$predict)
+Confusion.Logit.C.Test=CM(Logit.C.Test,Y.CT)
+
+#Confusion matrices:
+Confusion.Logit.C.Train$C
+Confusion.Logit.C.Test$C
+
+#LR - A
+##Train:
+LR.A.Train=apply(X.A,1,LR.A$predict)
+Confusion.LR.A.Train=CM(LR.A.Train,Y.A)
+##Test:
+LR.A.Test=apply(X.AT,1,LR.A$predict)
+Confusion.LR.A.Test=CM(LR.A.Test,Y.AT)
+
+#Confusion matrices:
+Confusion.LR.A.Train$C
+Confusion.LR.A.Test$C
+
+#LR - B
+##Train:
+LR.B.Train=apply(X.B,1,LR.B$predict)
+Confusion.LR.B.Train=CM(LR.B.Train,Y.B)
+##Test:
+LR.B.Test=apply(X.BT,1,LR.B$predict)
+Confusion.LR.B.Test=CM(LR.B.Test,Y.BT)
+
+#Confusion matrices:
+Confusion.LR.B.Train$C
+Confusion.LR.B.Test$C
+
+#LR - C
+##Train:
+LR.C.Train=apply(X.C,1,LR.C$predict)
+Confusion.LR.C.Train=CM(LR.C.Train,Y.C)
+##Test:
+LR.C.Test=apply(X.CT,1,LR.C$predict)
+Confusion.LR.C.Test=CM(LR.C.Test,Y.CT)
+
+#Confusion matrices:
+Confusion.LR.C.Train$C
+Confusion.LR.C.Test$C
+```
+\ecol
+
+```{r,echo=FALSE,fig.height=4.2,fig.width=8}
+#plotting
+par(mfrow=c(1,2))
+#LDA - A
+a=-LDA.A$b/LDA.A$w[2]
+b=-LDA.A$w[1]/LDA.A$w[2]
+xmin=min(X.AT[,1])-2
+ymin=min(X.AT[,2])-2
+xmax=max(X.AT[,1])+2
+ymax=max(X.AT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample A - Train\n LDA",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.A,col=c('blue4','salmon')[Y.A+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample A - Test\n LDA",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.AT,col=c('blue4','salmon')[Y.AT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+#Logit -A
+a=-Logit.A$w[1]/Logit.A$w[3]
+b=-Logit.A$w[2]/Logit.A$w[3]
+xmin=min(X.AT[,1])-2
+ymin=min(X.AT[,2])-2
+xmax=max(X.AT[,1])+2
+ymax=max(X.AT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample A - Train\n Logistic regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.A,col=c('blue4','salmon')[Y.A+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample A - Test\n Logistic regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.AT,col=c('blue4','salmon')[Y.AT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+#LR -A
+a=(-LR.A$alpha-LR.A$w[1])/LR.A$w[3]
+b=-LR.A$w[2]/LR.A$w[3]
+xmin=min(X.AT[,1])-2
+ymin=min(X.AT[,2])-2
+xmax=max(X.AT[,1])+2
+ymax=max(X.AT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample A - Train\n Linear regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.A,col=c('blue4','salmon')[Y.A+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample A - Test\n Linear regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.AT,col=c('blue4','salmon')[Y.AT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+#LDA -B
+
+a=-LDA.B$b/LDA.B$w[2]
+b=-LDA.B$w[1]/LDA.B$w[2]
+xmin=min(X.BT[,1])-2
+ymin=min(X.BT[,2])-2
+xmax=max(X.BT[,1])+2
+ymax=max(X.BT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample B - Train\n LDA",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.B,col=c('blue4','salmon')[Y.B+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample B - Test\n LDA",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.BT,col=c('blue4','salmon')[Y.BT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+#Logit -B
+a=-Logit.B$w[1]/Logit.B$w[3]
+b=-Logit.B$w[2]/Logit.B$w[3]
+xmin=min(X.BT[,1])-2
+ymin=min(X.BT[,2])-2
+xmax=max(X.BT[,1])+2
+ymax=max(X.BT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample B - Train\n Logistic regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.B,col=c('blue4','salmon')[Y.B+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample B - Test\n Logistic regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.BT,col=c('blue4','salmon')[Y.BT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+#LR - B
+a=(-LR.B$alpha-LR.B$w[1])/LR.B$w[3]
+b=-LR.B$w[2]/LR.B$w[3]
+xmin=min(X.BT[,1])-2
+ymin=min(X.BT[,2])-2
+xmax=max(X.BT[,1])+2
+ymax=max(X.BT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample B - Train\n Linear regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.B,col=c('blue4','salmon')[Y.B+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample B - Test\n Linear regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.BT,col=c('blue4','salmon')[Y.BT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+#LDA -C
+a=-LDA.C$b/LDA.C$w[2]
+b=-LDA.C$w[1]/LDA.C$w[2]
+xmin=min(X.CT[,1])-2
+ymin=min(X.CT[,2])-2
+xmax=max(X.CT[,1])+2
+ymax=max(X.CT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample C - Train\n LDA",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.C,col=c('blue4','salmon')[Y.C+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample C - Test\n LDA",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.CT,col=c('blue4','salmon')[Y.CT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+#Logit- C
+a=-Logit.C$w[1]/Logit.C$w[3]
+b=-Logit.C$w[2]/Logit.C$w[3]
+xmin=min(X.CT[,1])-2
+ymin=min(X.CT[,2])-2
+xmax=max(X.CT[,1])+2
+ymax=max(X.CT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample C - Train\n Logistic regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.C,col=c('blue4','salmon')[Y.C+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample C - Test\n Logistic regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.CT,col=c('blue4','salmon')[Y.CT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+#LR - C
+a=(-LR.C$alpha-LR.C$w[1])/LR.C$w[3]
+b=-LR.C$w[2]/LR.C$w[3]
+xmin=min(X.CT[,1])-2
+ymin=min(X.CT[,2])-2
+xmax=max(X.CT[,1])+2
+ymax=max(X.CT[,2])+2
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample C - Train\n Linear regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+points(X.C,col=c('blue4','salmon')[Y.C+1],pch=19,cex=.4)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+plot(c(),ylim=c(ymin,ymax)+c(1,-1),xlim=c(xmin,xmax)+c(1,-1),xlab='',ylab='',main="Sample C - Test\n Linear regression",cex.main=.8)
+polygon(x=c(xmin,xmin,(ymax-a)/b,(ymin-a)/b),y=c(ymin,ymax,ymax,ymin),col=rgb(.7, .7 ,.7 ,0.5), border=NA)
+points(X.CT,col=c('blue4','salmon')[Y.CT+1],pch=19,cex=.4)
+abline(a=a,b=b,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+
+```
+
+
+```{r pander, echo=F}
+panderOptions('table.style','rmarkdown')
+labels=c( 'Model' , 'A.train' ,  'A.test' , 'B.train' , 'B.test' , 'C.train'  , 'C.test' )
+rlda=c('LDA',Confusion.LDA.A.Train$Error, Confusion.LDA.A.Test$Error, Confusion.LDA.B.Train$Error, Confusion.LDA.B.Test$Error, Confusion.LDA.C.Train$Error, Confusion.LDA.C.Test$Error)
+rlogit=c('Logit',Confusion.Logit.A.Train$Error, Confusion.Logit.A.Test$Error, Confusion.Logit.B.Train$Error, Confusion.Logit.B.Test$Error, Confusion.Logit.C.Train$Error, Confusion.Logit.C.Test$Error)
+rlr=c('LR',Confusion.LR.A.Train$Error, Confusion.LR.A.Test$Error, Confusion.LR.B.Train$Error, Confusion.LR.B.Test$Error, Confusion.LR.C.Train$Error, Confusion.LR.C.Test$Error)
+recap=rbind(labels,rlda,rlogit,rlr)
+rownames(recap) <- NULL
+pander(recap,caption="Comparison of the 3 models on 3 samples - error in %")
+```
+
+We can see that the logistic regression outperforms LDA and linear regression on the 3 datasets even on A where the training set is linearly separable, thus allowing the algorithm to diverge and the computed weights to be large and prone to overfit the training set. 
+The LDA do well on the sets A and B where the model of gaussian distribution is quite accurate; although the mislclassification measure favors the logitic regression, the decision boundaries of LDA on A and B seems more logic - the generative classification is suitable here -  while the existence of two separate clusters on a single class in the set C affects the results of LDA badly.
+
+
+##QDA model:
+
+When relaxing the assumption that the two classes share the same covariance matrix, the maximum likelihood yields the same results excpet from:
+\[\Sigma_0^*=\frac{n}{\sum_{i=1}^n(1-y_i)}\bar\Sigma_0\]
+\[\Sigma_1^*=\frac{n}{\sum_{i=1}^ny_i}\bar\Sigma_1\]
+
+As for the decision boundary, following the same step we get a boundary of quadratic equation:
+\[x^TQx+w^Tx+b=0\]
+with:
+\[Q=\frac{1}{2}(\Sigma_O^{-1}+\Sigma_1^{-1})\]
+\[w=\Sigma_1^{-1}\mu_1-\Sigma_0^{-1}\mu_0\]
+\[b=\log\left(\frac{\alpha\sqrt{det \Sigma_0}}{(1-\alpha)\sqrt{det \Sigma_1}}\right)-\frac{1}{2}\mu^T_1\Sigma_1^{-1}\mu_1+\frac{1}{2}\mu_0^T\Sigma_0^{-1}\mu_0\]
+
+We implement the QDA in the following function:
+
+```{r}
+MLE.QDA<-function(X,Y){
+  alpha=mean(Y)
+  mu1=colSums(X[Y==1,])/sum(Y)
+  mu0=colSums(X[Y==0,])/sum(1-Y)
+  emp.sigma.0=(t(X[Y==0,]-mu0)%*%(X[Y==0,]-mu0))/length(Y)
+  emp.sigma.1=(t(X[Y==1,]-mu1)%*%(X[Y==1,]-mu1))/length(Y)
+  sigma.0=length(Y)/sum(1-Y)*emp.sigma.0
+  sigma.1=length(Y)/sum(Y)*emp.sigma.1
+  A=solve(sigma.0)
+  B=solve(sigma.1)
+  Q=(A-B)/2
+  w=B%*%mu1-A%*%mu0
+  b=log(alpha*sqrt(det(sigma.0))/(1-alpha)/sqrt(det(sigma.1)))
+  -t(mu1)%*%B%*%mu1/2+t(mu0)%*%B%*%mu0/2
+  Conic=cbind(rbind(Q,t(w)/2),c(w/2,b))
+  predict<-function(x){((t(c(x,1))%*%Conic%*%c(x,1))>=0)+0}
+  list(alpha=alpha,mu1=mu1,mu0=mu0,sigma.0=sigma.0,
+       sigma.1=sigma.1,Q=Conic,predict=predict)
+}
+```
+
+```{r,echo=F}
+QDA.A=MLE.QDA(X.A,Y.A)
+QDA.B=MLE.QDA(X.B,Y.B)
+QDA.C=MLE.QDA(X.C,Y.C)
+```
+###The estimated parameters:
+```{r, echo=F, results='asis'}
+pandoc.table(as.data.frame(QDA.A[1:5]),caption="QDA - sample A",round=2,style='rmarkdown',split.tables=Inf)
+pandoc.table(as.data.frame(QDA.B[1:5]),caption="QDA - sample B",round=2,style='rmarkdown',split.tables=Inf)
+pandoc.table(as.data.frame(QDA.C[1:5]),caption="QDA - sample C",round=2,style='rmarkdown',split.tables=Inf)
+```
+
+###Estimated gaussian distributions and decision boundaries on the training sets A,B and C:
+
+```{r,echo=FALSE,fig.height=10}
+par(mfrow=c(3,2))
+#A-train
+plot(X.A,col=c('blue4','salmon')[Y.A+1],pch=19,cex=.6,ylim=range(X.A[,2])+c(-1,1),xlab='X1',ylab='X2',main="Sample A - train\nQDA")
+conicPlot(QDA.A$Q,add=T,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+points(t(LDA.A$mu1),pch=4,lwd=3)
+points(t(LDA.A$mu0),pch=4,lwd=3)
+for(o in c(.5,.7,.9)){
+temp=ellipse(mu=QDA.A$mu0, sigma=QDA.A$sigma.0,alpha=o,col="gray",pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+temp=ellipse(mu=QDA.A$mu1,sigma=QDA.A$sigma.1,alpha=o,col='gray',pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+}
+#A-test
+plot(c(),ylim=range(X.A[,2])+c(-1,1),xlim=range(X.A[,1])+c(-1,1),xlab='X1',ylab='X2',main="Sample A - test\nQDA")
+gridX=seq(-12,12,length.out = 100)
+gridY=seq(-7,6,length.out = 100)
+grid=expand.grid(gridX,gridY)
+gridZ=apply(grid,1,QDA.A$predict)
+points(x=grid[gridZ==1,1],y=grid[gridZ==1,2],pch=19,cex=.7,col=rgb(.7, .7 ,.7 ,0.5))
+points(X.AT,col=c('blue4','salmon')[Y.AT+1],pch=19,cex=.6)
+conicPlot(QDA.A$Q,add=T,col='darkgreen', lwd=3,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+#B- train
+plot(X.B,col=c('blue4','salmon')[Y.B+1],pch=19,cex=.6,ylim=range(X.B[,2])+c(-1,1),xlab='X1',ylab='X2',main="Sample B - train\nQDA")
+conicPlot(QDA.B$Q,add=T,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+points(t(LDA.B$mu1),pch=4,lwd=3)
+points(t(LDA.B$mu0),pch=4,lwd=3)
+for(o in c(.5,.7,.9)){
+temp=ellipse(mu=QDA.B$mu0, sigma=QDA.B$sigma.0,alpha=o,col="gray",pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+temp=ellipse(mu=QDA.B$mu1,sigma=QDA.B$sigma.1,alpha=o,col='gray',pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+}
+#B-test:
+plot(c(),ylim=range(X.B[,2])+c(-1,1),xlim=range(X.B[,1])+c(-1,1),xlab='X1',ylab='X2',main="Sample B - test\nQDA")
+gridX=seq(-12,12,length.out = 100)
+gridY=seq(-7,6,length.out = 100)
+grid=expand.grid(gridX,gridY)
+gridZ=apply(grid,1,QDA.B$predict)
+points(x=grid[gridZ==1,1],y=grid[gridZ==1,2],pch=19,cex=.7,col=rgb(.7, .7 ,.7 ,0.5))
+points(X.BT,col=c('blue4','salmon')[Y.BT+1],pch=19,cex=.6)
+conicPlot(QDA.B$Q,add=T,col='darkgreen', lwd=3,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+
+#C-train:
+plot(X.C,col=c('blue4','salmon')[Y.C+1],pch=19,cex=.6,ylim=range(X.C[,2])+c(-1,1),xlab='X1',ylab='X2',main="Sample C - train\nQDA")
+conicPlot(QDA.C$Q,add=T,col='darkgreen', lwd=2,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+points(t(LDA.C$mu1),pch=4,lwd=3)
+points(t(LDA.C$mu0),pch=4,lwd=3)
+for(o in c(.5,.7,.9)){
+temp=ellipse(mu=QDA.C$mu0, sigma=QDA.C$sigma.0,alpha=o,col="gray",pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+temp=ellipse(mu=QDA.C$mu1,sigma=QDA.C$sigma.1,alpha=o,col='gray',pch=19,cex=.4)
+text(t(temp[100,]),paste((1-o)*100,"%"),cex=.7,col='gray4')
+}
+#C-test:
+plot(c(),ylim=range(X.C[,2])+c(-1,1),xlim=range(X.C[,1])+c(-1,1),xlab='X1',ylab='X2',main="Sample C - test\nQDA")
+gridX=seq(-12,12,length.out = 100)
+gridY=seq(-7,6,length.out = 100)
+grid=expand.grid(gridX,gridY)
+gridZ=apply(grid,1,QDA.C$predict)
+points(x=grid[gridZ==1,1],y=grid[gridZ==1,2],pch=19,cex=.7,col=rgb(.7, .7 ,.7 ,0.5))
+points(X.CT,col=c('blue4','salmon')[Y.CT+1],pch=19,cex=.6)
+conicPlot(QDA.C$Q,add=T,col='darkgreen', lwd=3,lty=2)
+legend("top",legend=c("class 0","class 1","predicted=1","DB"),col=c("blue4","salmon",rgb(.7,.7 ,.7,0.5),'darkgreen', lwd=2),pch=c(19,19,15,NaN),cex=.4,lty=c(NaN,NaN,NaN,2),horiz=T,bg='white')
+```
+
+###Performance of QDA:
+
+```{r}
+#QDA - A
+##Train:
+QDA.A.Train=apply(X.A,1,QDA.A$predict)
+Confusion.QDA.A.Train=CM(QDA.A.Train,Y.A)
+##Test:
+QDA.A.Test=apply(X.AT,1,QDA.A$predict)
+Confusion.QDA.A.Test=CM(QDA.A.Test,Y.AT)
+#Confusion matrices:
+Confusion.QDA.A.Train$C
+Confusion.QDA.A.Test$C
+
+#QDA - B
+##Train:
+QDA.B.Train=apply(X.B,1,QDA.B$predict)
+Confusion.QDA.B.Train=CM(QDA.B.Train,Y.B)
+##Test:
+QDA.B.Test=apply(X.BT,1,QDA.B$predict)
+Confusion.QDA.B.Test=CM(QDA.B.Test,Y.BT)
+#Confusion matrices:
+Confusion.QDA.B.Train$C
+Confusion.QDA.B.Test$C
+
+#QDA - C
+##Train:
+QDA.C.Train=apply(X.C,1,QDA.C$predict)
+Confusion.QDA.C.Train=CM(QDA.C.Train,Y.C)
+##Test:
+QDA.C.Test=apply(X.CT,1,QDA.C$predict)
+Confusion.QDA.C.Test=CM(QDA.C.Test,Y.CT)
+#Confusion matrices:
+Confusion.QDA.C.Train$C
+Confusion.QDA.C.Test$C
+```
+
+```{r , echo=F}
+rqda=c('QDA',Confusion.QDA.A.Train$Error, Confusion.QDA.A.Test$Error, Confusion.QDA.B.Train$Error, Confusion.QDA.B.Test$Error, Confusion.QDA.C.Train$Error, Confusion.QDA.C.Test$Error)
+recap=rbind(recap,rqda)
+rownames(recap) <- NULL
+pander(recap,caption="Comparison of the 4 models on 3 samples - error in %")
+```
+
+As we expected, the QDA did well on sample B where the assumption of gaussian distributions with different covariances is suitable. Its performance on A is quite similar to this of LDA, but on sample C, QDA seems more sensitive to outliers, thus performing poorly.

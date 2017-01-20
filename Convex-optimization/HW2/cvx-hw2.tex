@@ -1,0 +1,431 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr}
+\usepackage{microtype}
+
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.6in}
+\addtolength{\topmargin}{-.3in}
+
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf Convex optimization: Homework 2}
+\cfoot{\thepage}
+
+\newtheoremstyle{exo}%
+{\topsep}{\topsep}%
+{}{}%
+{\bfseries}{}%
+{\newline}%
+{\thmname{#1}\thmnumber{ #2}\thmnote{ #3}}
+\theoremstyle{exo}
+\newtheorem*{exercise}{Exercise}
+
+
+\title{[M2, MVA]\\ Convex Optimization, Algorithms and Applications}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Symd}{\mathbf{S}^n_{++}}
+\newcommand{\Syms}{\mathbf{S}^n_{+}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\1}{\mathbf{1}}
+\newcommand{\0}{\mathbf{0}}
+
+\renewcommand{\baselinestretch}{1.2}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Homework 2}\\
+\today
+\vspace{15pt}
+\end{center}
+
+\vspace{10pt}
+
+
+\begin{exercise}[5.5 - Dual of general LP.]
+We consider the LP:
+\begin{equation}
+\label{LP1}
+\begin{aligned}
+& \underset{x}{\text{minimize}} & & c^Tx \\
+& \text{subject to} & & Gx\preceq h\\
+& & & Ax=b
+\end{aligned}
+\end{equation}
+The Lagrangien of (\ref{LP1}) is:
+\[
+L(x,\lambda,\nu)=c^Tx+\lambda^T(Gx-h)+\nu^T(Ax-b)=(c^T+\lambda^TG+\nu^TA)x-\lambda^Th-\nu^Tb.
+\] 
+The corresponding Lagrange dual function is:
+\[
+g(\lambda,\nu)=\inf_xL(x,\lambda,\nu)=\begin{cases}
+-\lambda^Th-\nu^Tb\phantom{abc}if\:\:c^T+\lambda^TG+\nu^TA=0\\
+-\infty\phantom{ab}otherwise.
+\end{cases}
+\]
+Hence the dual problem:
+\begin{equation*}
+\begin{aligned}
+& {\text{maximize}} & & g(\lambda,\nu)  \\
+& \text{subject to} & & \lambda\succeq \0
+\end{aligned}
+\end{equation*}
+With explicit equality contraints:
+\begin{equation*}
+\begin{aligned}
+& {\text{maximize}} & & -\lambda^Th-\nu^Tb  \\
+& \text{subject to} & & c^T+\lambda^TG+\nu^TA=0\\
+& & & \lambda\succeq \0
+\end{aligned}
+\end{equation*}
+\end{exercise}
+
+\begin{exercise}[5.7 - Piecewise-linear minimization]
+We consider the convex piecewise-linear minimization problem:
+\begin{equation}
+\label{E2}
+Minimize\phantom{abc}\max_{i=1,...,m}(a_i^Tx+b_i)
+\end{equation}
+with $x\in\R^n$.\\
+(a) Let us consider the equivalent problem:
+\begin{equation}
+\label{E1}
+\begin{aligned}
+& {\text{minimize}} & & \max_{i=1,...,m}y_i \\
+& \text{subject to} & & y_i=a_i^Tx+b_i,\: i=1,...,m.
+\end{aligned}
+\end{equation}
+with variables $x\in\R^n,\:y\in\R^m$.\\
+The dual function of (\ref{E1}) is as follows:
+\[
+g(\lambda)=\inf_{x,y}\left(\max_{i=1,...,m}y_i+\sum\limits_{i=1}^m\lambda_i(a_i^Tx+b_i-y_i)\right)
+\]
+We minimize for $x$ then for $y$:
+\[\inf_x\left(\max_{i=1,...,m}y_i+\sum\limits_{i=1}^m\lambda_i(a_i^Tx+b_i-y_i\right)=\begin{cases}
+\max_iy_i-\lambda^Ty+\lambda^Tb\phantom{abc}if\:\sum\limits_{i=1}^m\lambda_ia_i^T=0\\
+-\infty\phantom{abc}otherwise
+\end{cases}\] 
+Then:
+\[
+g(\lambda)=\inf_y(\max_iy_i-\lambda^Ty+\lambda^Tb)\phantom{abc}ifA^T\lambda=0.
+\]
+If $\lambda$ has a nonpositive component say $\lambda_k<0$ then for $y=-\alpha e_k$ whith $\alpha\geq 0$:\[\max_iy_i-\lambda^Ty+\lambda^Tb=\alpha\lambda_k+\lambda^Tb\xrightarrow[\alpha\to+\infty]{}-\infty\]
+If $\1^Ty\neq 1$ for $y=\alpha\1$ ($\alpha\in\R$):
+\[\max_iy_i-\lambda^Ty+\lambda^Tb=\alpha(1-\1^T\lambda)+\lambda^Tb\xrightarrow[\alpha\to\pm\infty]{}-\infty\]
+depending on the sign of $\1^T\lambda-1$.\\
+If $\1^T\lambda=1\:\wedge\:\lambda\succeq\0$ then:
+\[\lambda^Ty\leq\sum_j\lambda_j\max_iy_i=\max_iy_i\]
+Hence $\max_iy_i-\lambda^Ty+\lambda^Tb\geq\lambda^Tb$ with equality reached for $y=\0$.\\
+Therefore:
+\begin{equation*}
+g(\lambda)=\begin{cases}
+\lambda^Tb\phantom{abc}if\:(A^T\lambda=0)\wedge(\lambda\succeq\0)\wedge(\1^T\lambda=1)\\
+-\infty\phantom{abc}otherwise.
+\end{cases}
+\end{equation*}
+The dual problem with explicit constraints is:
+\begin{equation}
+\label{D2}
+\begin{aligned}
+& {\text{maximize}} & & \lambda^Tb \\
+& \text{subject to} & & A^T\lambda=\0\\
+& & & \1^T\lambda=1\\
+& & & \lambda\succeq \0
+\end{aligned}
+\end{equation}
+(b) The problem in (\ref{E2}) is equivalent to the LP:
+\begin{equation}
+\label{LP2}
+\begin{aligned}
+& {\text{minimize}} & & t \\
+& \text{subject to} & & Ax+b\preceq t\1
+\end{aligned}
+\end{equation}
+The dual function is:
+\[g(\lambda)=\inf_{t,x} t(1-\lambda^T\1)+\lambda^TAx+\lambda^Tb=\begin{cases}
+\lambda^Tb\phantom{abc}if\:(\lambda^T\1=1)\:\wedge\:(\lambda^TA=\0)\:\wedge\:(\lambda\succeq\0)\\
+-\infty\phantom{abc}otherwise
+\end{cases}\]
+Hence, the problem (\ref{LP2}) has for dual:
+\begin{equation*}
+\begin{aligned}
+& {\text{maximize}} & & \lambda^Tb \\
+& \text{subject to} & & A^T\lambda=0\\
+&  & & \1^T\lambda=0\\
+&  & & \lambda\succeq\0
+\end{aligned}
+\end{equation*}
+Which is the same as (\ref{D2}).\\
+(c) Suppose we approximate the objective function (\ref{E2}) by the smooth function:
+\[f_0(x)=log\left(\sum\limits_{i=1}^m\exp(a_i^Tx+b_i)\right)\]
+and solve the unconstrained geometric program:
+\begin{equation}
+\label{E3}
+\text{minimize  } f_0(x)
+\end{equation}
+The dual of this problem is:
+\begin{equation}
+\label{D4}
+\begin{aligned}
+& {\text{maximize}} & & b^T\nu-\sum_{i=1}^m\nu_i\log\nu_i  \\
+& \text{subject to} & & \1^T\nu=1\\
+&  & & A^T\nu=\0\\
+&  & & \nu\succeq\0
+\end{aligned}
+\end{equation}
+Let $p^*_{pwl}$ and $p^*_{gp}$ be the optimal values of (\ref{E2}) and (\ref{E3}) respectively.\\
+We want to show that:
+\[ 0\leq p^*_{gp}- p^*_{pwl}\leq \log m\]
+For the LHS, we have for all $x\in\R^n$:
+\[max_i(a_i^Tx+b_i)\leq\log\sum_{i=1}^m\exp(a_i^Tx+b_i)\]
+hence: 
+\[p^*_{pwl}\leq p^*_{gp}\]
+For the RHS, let $\nu^*$ be the optimal of the dual (\ref{D4}), $\nu^*$ is feasible for (\ref{D2}) with:
+\[b^T\nu^*-\sum_{i=1}^m\nu^*_i\log\nu^*_i=p^*_{gp} \]
+Thus:
+\[\nu^{*T}b\leq p^*_{pwl}\]
+We can easily show that:
+\[
+\inf_{s.t\:\1^T\nu=1}\sum_{i=1}^m\nu_i\log\nu_i=-\log m
+\]
+Hence:
+\[p^*_{pwl}\geq p^*_{gp}+\sum_{i=1}^m\nu^*_i\log\nu^*_i\geq p^*_{gp}-\log m \]
+Therefore:
+\[ 0\leq p^*_{gp}- p^*_{pwl}\leq \log m\]
+(d) Let us consider the problem:
+\begin{equation}
+\label{E4}
+\text{minimize}\phantom{abc}\frac{1}{\gamma}\log\left(\sum_{i=1}^m\exp(\gamma(a_i^Tx+b_i))\right)
+\end{equation}
+Where $\gamma>0$ is a parameter.\\
+The problem in (\ref{E4}) is equivalent to:
+\begin{equation*}
+\begin{aligned}
+& {\text{minimize}} & &  \frac{1}{\gamma}\log\left(\sum_{i=1}^m\exp(\gamma y_i)\right) \\
+& \text{subject to} & & Ax+b=y
+\end{aligned}
+\end{equation*}
+which has the Lagrangian:
+\[L(x,y,\lambda)=\frac{1}{\gamma}\log\left(\sum_{i=1}^m\exp(\gamma y_i)\right)+\lambda^T(Ax+b-y)\]
+To compute the dual function, we minimize with respect to x:
+\[\inf_xL(x,y,\lambda)=\frac{1}{\gamma}\log\left(\sum_{i=1}^m\exp(\gamma y_i)\right)+\lambda^Tb-\lambda^Ty,\:if\:\lambda^TA=\0\text{ and is unbounded otherwise.}\]
+For $y$ we solve the following:
+\[\frac{\partial}{\partial y_i}(\frac{1}{\gamma}\log\left(\sum_{i=1}^m\exp(\gamma y_i)\right)-\lambda^Ty)=\frac{\exp(\gamma y_i)}{\sum_{j=1}^m\exp(\gamma y_j)}-\lambda_i=0\]
+Which means $\lambda\succeq \0$ and $\1^T\lambda=1$ with:
+\[\lambda^Ty=\frac{1}{\gamma}\sum_i\lambda_i\log\lambda_i+\frac{1}{\gamma}\log\left(\sum_{i=1}^m\exp(\gamma y_i)\right)\]
+Therefore:
+\[g(\lambda)=\inf_{x,y}L(x,y,\lambda)=\begin{cases}
+\lambda^Tb-\frac{1}{\gamma}\sum_i\lambda_i\log\lambda_i\phantom{abc}if\:(A^T\lambda=0)\:\wedge\:(\1^T\lambda=1)\:\wedge\:(\lambda\succeq\0)\\
+-\infty\phantom{abc}otherwise
+\end{cases}\]
+And the explicit dual problem:
+\begin{equation}
+\label{D5}
+\begin{aligned}
+& {\text{maximize}} & & b^T\lambda-\frac{1}{\gamma}\sum_i\lambda_i\log\lambda_i \\
+& \text{subject to} & & \1^T\lambda=1\\
+&  & & A^T\lambda=\0\\
+&  & & \lambda\succeq\0
+\end{aligned}
+\end{equation}
+Let $p^*(\gamma)$ denote the optimal value of (\ref{E4}) and show that:
+\[p^*(\gamma)-\frac{1}{\gamma}\log m\leq p^*_{pwl}\leq p^*(\gamma)\]
+For the RHS:
+\[max_i(a_i^Tx+b_i)\leq\frac{1}{\gamma}\log\sum_{i=1}^m\exp(\gamma(a_i^Tx+b_i))\:(\forall x)\]
+Thus, $p^*_{pwl}\leq p^*(\gamma)$.\\
+Following the same reasoning in (c) for the LHS and considering $\lambda^*$  the optimal value of (\ref{D5}) which is feasible for (\ref{D2}):
+\[b^T\lambda^*-\frac{1}{\gamma}\sum_{i=1}^m\lambda^*_i\log\lambda^*_i=p^*(\gamma) \]
+and:
+\[\lambda^{*T}b\leq p^*_{pwl}\]
+And given that
+\[
+\inf_{s.t\:\1^T\lambda=1}\frac{1}{\gamma}\sum_{i=1}^m\lambda_i\log\lambda_i=-\frac{\log m}{\gamma}
+\]
+We find that:
+\[p^*(\gamma)-\frac{1}{\gamma}\log m\leq p^*_{pwl}\leq p^*(\gamma)\]
+Hence: $p^*(\gamma)\xrightarrow[\gamma\to+\infty]{}p^*_{pwl}$
+\end{exercise}
+
+\begin{exercise}[5.9 - Suboptimality of a simple covering ellipsoid]
+Let us consider the problem of determining the mnimum volume ellipsoid, centered at the origin, that contains the points $a_1,...,a_m\in\R^n$:
+\begin{equation}
+\label{P1}
+\begin{aligned}
+& {\text{minimize}} & & f_0(X)=\log\det(X^{-1})\\
+& \text{subject to} & & a_i^TXa_i\leq 1,\:i=1,..,m
+\end{aligned}
+\end{equation}
+With $\mathbf{dom} f_0=\Symd$. We assume that $a_1,..,a_m$ span $\R^n$.\\
+(a) Let $X_{sim}=\left(\sum\limits_{k=1}^ma_ka_k^T\right)^{-1}$.\\
+To show that $X_{sim}$ is feasible we will show that:
+\[\begin{bmatrix}\sum\limits_{k=1}^ma_ka_k^T&a_i\\a_i^T&1\end{bmatrix}\succeq \0\]
+We have:
+\[\begin{bmatrix}\sum\limits_{k=1}^ma_ka_k^T&a_i\\a_i^T&1\end{bmatrix}=\begin{bmatrix}\sum\limits_{k\neq i}^ma_ka_k^T&0\\0&0\end{bmatrix}+\begin{bmatrix}a_i\\1\end{bmatrix}\begin{bmatrix}a_i^T&1\end{bmatrix}\succeq \0\]
+As sum of two matrices from $\Syms$.\\
+The Schur complement of $\sum\limits_{k=1}^ma_ka_k^T$ is positive, hence:
+\[S=1-a_i^TX_{sim}a_i\geq0\]
+\[a_i^TX_{sim}a_i\leq1\phantom{abc}Q.E.D\]
+(b) The dual problem of (\ref{P1}) is:
+\begin{equation*}
+\begin{aligned}
+& {\text{maximize}} & & \log\det(\sum\limits_{i=1}^m\lambda_ia_ia_i^T)-\1^T\lambda+n\\
+& \text{subject to} & & \sum\limits_{i=1}^m\lambda_ia_ia_i^T\succ 0\\
+& & & \lambda\succeq \0
+\end{aligned}
+\end{equation*}
+For $\lambda=t\1$, $(t\geq0)$ the dual function is as follows:
+\[g(t\1)=\log(t^n\det(\sum\limits_{i=1}^ma_ia_i^T))-mt+n=\log\det(\sum\limits_{i=1}^ma_ia_i^T))+n\log t-mt+n\]
+we maximize over $t>0$:
+\[\frac{\partial g(t\1)}{\partial t}=\frac{n}{t}-m=0\]
+Thus $t^*=\dfrac{n}{m}$.\\
+with:
+\[g(t^*\1)=\log\det(\sum\limits_{i=1}^ma_ia_i^T)+n\log(\dfrac{n}{m})\]
+For$ X=X_{sim}$ the objective function is:
+\[f_0(X_{sim})=\log\det(\sum\limits_{i=1}^ma_ia_i^T)\]
+Hence the duality gap between $X_{sim}$ and $\lambda=t^*\1$ is equal to 
+\[gap=n\log(n/m)\leq 0,\:(n\leq m\text{ since the m vectors span }\R^n)\]
+This is to say that for $X^*$ the optimal solution:
+\[f_0(X_{sim})-f_0(X^*)\leq n\log(\dfrac{m}{n}) \]
+We know that for an ellipsoid $\mathcal E_X=\{z|\:z^TXz\leq 1\}$, the volume $V_X$ is proportional to $(\exp f_0(X))^{1/2}$:\\
+Thus:
+\[\dfrac{V_{sim}}{V^*}\leq\left(\dfrac{m}{n}\right)^{n/2}\]
+\end{exercise}
+
+\begin{exercise}[5.11 - Dual problem]
+Consider the problem
+\begin{equation}
+\label{P2}
+\begin{aligned}
+& {\text{minimize}} & & \sum\limits_{i=1}^N\|A_ix+b_i\|_2+\dfrac{1}{2}\|x-x_0\|_2^2 \\
+\end{aligned}
+\end{equation}
+The problem data are $A_i\in\R^{m_i\times n},\:b_i\in\R^{m_i}$ and $x_0\in\R^n$. \\
+The problem in (\ref{P2}) is equivalent to:
+\begin{equation*}
+\begin{aligned}
+& {\text{minimize}} & & \sum\limits_{i=1}^N\|y_i\|_2+\dfrac{1}{2}\|x-x_0\|_2^2 \\
+& \text{subject to} & & y_i=A_ix+b_i\:\forall i=1,..,N\\
+\end{aligned}
+\end{equation*}
+The Lagrangian is:
+\[L(x,\lambda_1,...,\lambda_N)=\sum\limits_{i=1}^N\|y_i\|_2+\dfrac{1}{2}\|x-x_0\|_2^2+\sum_{i=1}^N\lambda_i^T(y_i-A_ix-b_i)\]
+To minimize over $y_i$, we impose $\|\lambda_i\|_2\leq 1$.\\
+In fact, if $\|\lambda_i\|_2>1$ then for $y_i=-\alpha \lambda_i,\:\alpha>0$ the component $(\|y_i\|_2+\lambda_i^Ty_i)$ of the Lagrangian is equal to:
+\[\alpha \|\lambda_i\|(1-\|\lambda_i\|)\xrightarrow[\alpha\to+\infty]{}-\infty\]
+And if $\|\lambda_i\|_2\leq 1$ is satisfied, then C.S gives us:
+\[\lambda_i^Ty_i\geq -\|\lambda_i\|\|y_i\|\Rightarrow \|y_i\|_2+\lambda_i^Ty_i\geq 0\]
+With equality if $y_i=\0$, hence:
+\[\inf_{y_i}\|y_i\|_2+\lambda_i^Ty_i=\begin{cases}0,\phantom{abc}if\:\|\lambda_i\|\leq 1\\-\infty\:otherwise\end{cases} \]
+To minimize over x, we set the gradient to 0:
+\[\frac{\partial}{\partial x}L(...)=x-x_0-\sum_{i=1}^NA_i^T\lambda_i=\0\]
+Thus, the dual function is:
+\[g(\lambda_1,...,\lambda_N)=\begin{cases}-\dfrac{1}{2}\|\sum_{i=1}^NA_i^T\lambda_i\|^2-\sum_{i=1}^N\lambda_i^T(A_ix_0+b_i),\phantom{abc}if\:\|\lambda_i\|_2\leq 1\:(i=1,..,N)\\-\infty\phantom{ab}otherwise \end{cases}\]
+The explicit dual problem is:
+\begin{equation*}
+\begin{aligned}
+& {\text{maximize}} & &-\dfrac{1}{2}\|\sum_{i=1}^NA_i^T\lambda_i\|^2-\sum_{i=1}^N\lambda_i^T(A_ix_0+b_i) \\
+& \text{subject to} & & \|\lambda_i\|\leq1\:\ i=1,..,N\\
+\end{aligned}
+\end{equation*}
+\end{exercise}
+
+\begin{exercise}[5.13 - Lagrangian relaxation of Boolean LP]
+We consider the Boolean LP:
+\begin{equation}
+\label{BLP}
+\begin{aligned}
+& {\text{minimize}} & &c^Tx\\
+& \text{subject to} & & Ax\preceq b\\
+& & &x_i\in\{0,1\}\:\ i=1,..,n\\
+\end{aligned}
+\end{equation}
+(a) \textit{Lagrangian relaxation}:\\
+The problem (\ref{BLP}) can be reformulated as:
+\begin{equation*}
+\begin{aligned}
+& {\text{minimize}} & &c^Tx\\
+& \text{subject to} & & Ax\preceq b\\
+& & &x_i(1-x_i)=0\:\ i=1,..,n\\
+\end{aligned}
+\end{equation*}
+The Lagrangian is:
+\[L(x,\nu,\lambda)=c^Tx+\lambda^T(Ax-b)-\sum_{i=1}^n\nu_ix_i(1-x_i)=c^Tx+\lambda^T(Ax-b)-\nu^Tx+x^TDiag(\nu)x\]
+Minimizing with respect to x:\\
+If $\nu$ has a nonpositive component $\nu_i$ then the Lagrangian is unbounded for $x=\alpha e_i$ as $-\nu_i\alpha(1-\alpha)\xrightarrow[\alpha\to+\infty]{}-\infty$
+\[\frac{\partial L}{\partial x}(x,\nu,\lambda)=c+A^T\lambda-\nu+2Diag(\nu)x=\0\]
+Which gives:
+\[g(\nu,\lambda)=\min_xL(x,\nu,\lambda)=\begin{cases}-\frac{1}{4}(c+A^T\lambda+\nu)^T(Diag(\nu))^{-1}(c+A^T\lambda+\nu)-\lambda^Tb\\
+=-\frac{1}{4}\sum_{i=1}^n\frac{(c_i+a_i^T\lambda+\nu_i)^2}{\nu_i}-\lambda^Tb\hspace{10pt}(if\:\nu\succeq\0)\\
+-\infty\:otherwise\end{cases}\]
+Where $a_i$ is the $i^{th}$ column of $A$. If $\nu_i=0$ then we set the term:
+\[\frac{(c_i+a_i^T\lambda+\nu_i)^2}{\nu_i}=\begin{cases}+\infty,\phantom{abc}if\:c_i+a_i^T\lambda+\nu_i\neq0\\
+0\phantom{abc}if\:c_i+a_i^T\lambda+\nu_i=0\end{cases}\]
+The dual problem is:
+\begin{equation*}
+\begin{aligned}
+& {\text{maximize}} & &-\frac{1}{4}\sum_{i=1}^n\frac{(c_i+a_i^T\lambda+\nu_i)^2}{\nu_i}-\lambda^Tb\\
+& \text{subject to} & & \nu\succeq \0\\
+& & & \lambda\succeq \0
+\end{aligned}
+\end{equation*}
+We can then maximize over $\nu$, knowing that:
+\[\sup_{\nu_i\geq0}\left(-\frac{1}{4}\frac{(c_i+a_i^T\lambda-\nu_i)^2}{v_i}\right)=\begin{cases}c_i+a_i^T\lambda\phantom{abc}if\:c_i+a_i^T\lambda\leq0\\
+0\phantom{abc}if\:c_i+a_i^T\lambda>0\end{cases}=\min(0,c_i+a_i^T\lambda)\]
+The equivalent problem is:
+\begin{equation}
+\label{DREP}
+\begin{aligned}
+& {\text{maximize}} & &-\lambda^Tb-\sum_{i=1}^n\mu_i\\
+& \text{subject to} & & \mu_i=-\min(0,c_i+a_i^T\lambda)\\
+& & & \lambda\succeq\0
+\end{aligned}
+\end{equation}
+(b) We consider the LP relaxation problem:
+\begin{equation}
+\label{NBP}
+\begin{aligned}
+& {\text{minimize}} & &c^Tx\\
+& \text{subject to} & & Ax\preceq b\\
+& & &0\leq x_i\leq 1:\ i=1,..,n\\
+\end{aligned}
+\end{equation}
+Which we can rewrite as:
+\begin{equation*}
+\begin{aligned}
+& {\text{minimize}} & &c^Tx\\
+& \text{subject to} & & Ax\preceq b\\
+& & &-x\leq 0 \\
+& & &x\leq 1 
+\end{aligned}
+\end{equation*}
+The Lagrangian of the new problem is:
+\[L(x,\lambda,\nu,\mu)=c^Tx+\lambda^T(Ax-b)-\nu^Tx+\mu^T(x-\1)=(c+A^T\lambda-\nu+\mu)^Tx-\lambda^Tb-\mu^T\1\]
+Hence the dual function:
+\[g(\lambda,\nu,\mu)=\begin{cases}-\lambda^Tb-\mu^T\1\phantom{abc} if\:c+A^T\lambda-\nu+\mu=\0\\-\infty\phantom{abc}otherwise\end{cases}\]
+The explicit dual problem:
+\begin{equation}
+\label{DR}
+\begin{aligned}
+& {\text{maximize}} & &-\lambda^Tb-\mu^T\1\\
+& \text{subject to} & & c+A^T\lambda-\nu+\mu=\0 \\
+& & &\nu\succeq \0\\
+& & &\mu\succeq \0\\
+& & &\lambda\succeq \0
+\end{aligned}
+\end{equation}
+Let $p^*_{relaxation}$ be the optimal value of the relaxation problem (\ref{NBP}) and $p^*$ that of the boolean problem (\ref{BLP}). 
+The feasible set of the relaxation includes the feasible set of the boolean, hence:
+\[p^*_{relaxation}\leq p^*\]
+On the other hand, the two Lagrangian problems (\ref{DREP}) and (\ref{DR}) are equivalent when introducing $\nu=\mu+c+A^T\lambda$ in (\ref{DREP}). Therefore, we end up with the same lower bound.
+\end{exercise}
+\end{document}

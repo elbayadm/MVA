@@ -1,0 +1,185 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,graphicx,subfig,bbm,multirow,array,longtable}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage[left=2.5cm,right=2.5cm,top=3cm,bottom=3cm]{geometry}
+\newcolumntype{~}{>{\global\let\currentrowstyle\relax}}
+\newcolumntype{^}{>{\currentrowstyle}}
+\newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}%
+  #1\ignorespaces
+}
+
+
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf Deep Learning: Homework 2}
+\cfoot{\thepage}
+
+\newtheoremstyle{exo}%
+{\topsep}{\topsep}%
+{}{}%
+{\bfseries}{}%
+{\newline}%
+{\thmname{#1}\thmnumber{ #2}\thmnote{ #3}}
+\theoremstyle{exo}
+\newtheorem*{exercise}{}
+
+
+\title{[M2, MVA]\\ Deep Learning}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\p}{\mathbb{P}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+
+\renewcommand{\baselinestretch}{1.2}
+\newcommand{\indep}{\mathrel{\perp\mspace{-10mu}\perp}}
+\newcommand{\nindep}{\centernot{\indep}}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Homework 2}\\
+\today
+\vspace{10pt}
+\end{center}
+
+\vspace{7pt}
+
+\section{Analytic exercise}
+	\paragraph{1.}
+		Given a set of training samples $X=\{x^1,...x^M\}$. The loglikelihood of $X$ given $W$ is:
+		\[\begin{split}
+		S(X,W)=\sum_{m=1}^MP(x^m;W)&=\sum_m\log\sum_h\frac{1}{Z}\exp(-E(x^m,h;W))\\
+		&=\sum_m\log\sum_h\exp(-E(x^m,h;W))-M\log(Z)
+		\end{split}\]
+		where
+		\[E(x^m,h;W)=E(y;W)=-\frac{1}{2}y^TWy\:(\text{with }y=[x^m\:\:h]^T)\:\text{ and }Z=\sum_y\exp(-E(y;W))\]
+		We start with the derivative of $\log Z$ with respect to the weight $w_{ij}$:
+		\[\begin{split}
+		\frac{\partial \log Z}{\partial w_{ij}}&=\frac{1}{Z}\sum_y\frac{\partial}{\partial w_{ij}}\exp(\frac{1}{2}y^TWy)\\
+		&=\frac{1}{Z}\sum_yy_iy_j\exp(\frac{1}{2}y^TWy)\phantom{abcdefghikl}(\text{taking into consideration that } W\in\mathbf{S}^{N+K})\\
+		&=\sum_yy_iy_jP(y;W)=\langle y_iy_j\rangle_{P(y;W)}\\
+		\end{split}\]
+		Similarly:
+		\[\begin{split}
+		\frac{\partial}{\partial w_{ij}}\sum_m\log\sum_h\exp(-E(x^m,h;W))&=\sum_m\frac{\sum_hy_iy_j\exp(-E(x^m,h;W))}{\sum_h\exp(-E(x^m,h;W))}\\
+		&=\sum_m\sum_hy_iy_jP(h|x^m;W)\\
+		&=\sum_m\langle y_iy_j\rangle_{P(h,x^m;W)}
+		\end{split}\]
+		Therefore:
+		\[\begin{split}
+		\frac{\partial}{\partial w_{ij}}S(X,W)&=\sum_m\langle y_iy_j\rangle_{P(h,x^m;W)}-M\langle y_iy_j\rangle_{P(y;W)}\\
+		&=\sum_m\left[\langle y_iy_j\rangle_{P(h,x^m;W)}-\langle y_iy_j\rangle_{P(y;W)}\right]
+		\end{split}\]
+\section{Exact summations}
+We compute the exact value of the gradient of the log-likelihood with brute force for the Ising Model, the BM and the RBM to implement gradient ascent for each model on the log-likelihood of the data. In our model we use 8 hidden units (BM,RBM) with a learning rate of $0.1$
+\begin{figure}[H]
+\centering
+\includegraphics[width=13cm]{images/log_likelihood_brute_force_nhidden_8.jpg}
+\caption{Brute force: Gradient ascent log-likelihhod maximization\\Ising - bm - rbm}
+\end{figure}
+As we expected the BM with more degrees of freedom reached a higher log-likelihood than the two others. The ising model, as it doesn't capture higher-order statistics, scores the lowest log-likelihood. We can also note that the convergence rates of the BM and ising model are higher than that of the RBM.
+\section{Block-Gibbs sampling and Contrastive Divergence}
+In this section we use contrastive divergence with L = 1 and L = 10 to infer an RBM with 8 hidden units.
+\begin{figure}[H]
+\centering
+\includegraphics[width=13cm]{images/log_likelihood_monte_carlo_nhidden_8.jpg}
+\caption{CD: Gradient ascent log-likelihhod maximization\\rbm-cd1 - rbm-cd10}
+\end{figure}
+The intuition behind CD is that we would like the MC implemented by Gibbs sampling to conserve the distribution over the visible variables. For this we run the chain L=1 (resp L=10) then update the rbm weights to correct the chain. The larger is L the closest we are to the MC's equilibrium, which explains why rbm-cd-10's likelihood is closer to the brute force estimation.
+Moreover, we observe that the log-likelihood is not non-decreasing over iterations since the CD is just an approximate noisy gradient ascent.
+\section{Fun part}
+\subsection{Q1:}
+We sample from the learned rbm {brute force, CD1, CD10} with Gibbs-sampling using K ranging from 10 to 100. During training we track the network precision as the probability of satisfying the shifting constraint (figure \ref{ok}).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=10cm]{images/rbm_oks.jpg}
+\caption{Network precision\label{ok}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[trim={2cm 3cm 3cm 2cm},clip=true,width=9cm]{images/bars_rbm_8_8.jpg}}
+\caption{Samples - brute force}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[trim={2cm 3cm 3cm 2cm},clip=true,width=9cm]{images/bars_cd1_8_8.jpg}}
+\caption{Samples - CD1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[trim={2cm 3cm 3cm 2cm},clip=true,width=9cm]{images/bars_cd10_8_8.jpg}}
+\caption{Samples - CD10}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|~c|^c|^c|^c|^c|^c|^c|^c|^c|^c|^c|}
+\hline
+\rowstyle{\bfseries}
+K&10&20&30&40&50&60&70&80&90&100\\
+\hline
+$\substack{\phantom{abc}\\\text{rbm, brute force}\\\max=0.8958\\\phantom{abc}}$&0.80 &0.83 &0.84 &0.86 &0.87 &0.88 &0.87 &0.87 &0.89 &0.91\\
+\hline
+$\substack{\phantom{abc}\\\text{rbm, CD1}\\\max=0.9474\\\phantom{abc}}$&0.72 &0.77 &0.82 &0.84 &0.84 &0.87 &0.91 &0.89 &0.93 &0.92\\
+\hline
+$\substack{\phantom{abc}\\\text{rbm, CD10}\\\max=0.9649\\\phantom{abc}}$&0.87 &0.90 &0.88 &0.89 &0.92 &0.90 &0.90 &0.91 &0.92 &0.91\\
+\hline
+\end{tabular}
+\caption{Shifted samples (out of 500)}
+\end{table}
+We observe that the generated samples meet the precision of the network and in general the longer we iterate in Gibbs sampling the more precise we get. 
+
+\subsection{Q2:}
+We now repeat the same procedure with \texttt{n\_input=20} and \texttt{n\_hidden=20}, for this we choose \texttt{n\_samples=3000, step\_gd=.01}. We note that the network is less precise as the shifting constraint is at most 34\% of the time satisfied. With this we should mention that the training need more tuning to get the CD to converge as with this configuration we only reach:
+\[\min_{iter} \|E^{(iter)}_{dream}- E^{(iter)}_{awake}\|_2^2=
+\begin{cases}
+1.6189, \:CD1\\
+6.9341,\:CD10
+\end{cases}\]
+While this convergence criterion is $\ll 1$ in the previous parts.
+\begin{figure}[H]
+\centering
+\includegraphics[width=10cm]{images/rbm_diffs.jpg}
+\caption{diffs(dream,awake), rbm-CD1 - rbm-CD10}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|~c|^c|^c|^c|^c|^c|^c|^c|^c|^c|^c|}
+\hline
+\rowstyle{\bfseries}
+K&10&20&30&40&50&60&70&80&90&100\\
+\hline 
+CD1 &0.17 &0.20 &0.20 &0.26 &0.25 &0.24 &0.28 &0.31 &0.30 &0.33\\
+CD10 &0.19 &0.25 &0.24 &0.27 &0.28 &0.30 &0.31 &0.31 &0.34 &0.28\\
+\hline
+\end{tabular}
+\caption{Shifted samples (out of 500)}
+\end{table}
+
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[trim={2cm 3cm 3cm 2cm},clip=true,width=12cm]{images/bars_cd1_20_20.jpg}}
+\caption{Samples - CD1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[trim={2cm 3cm 3cm 2cm},clip=true,width=12cm]{images/bars_cd10_20_20.jpg}}
+\caption{Samples - CD10}
+\end{figure}
+\end{document}
+

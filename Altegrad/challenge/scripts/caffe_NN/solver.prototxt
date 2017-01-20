@@ -1,0 +1,19 @@
+# The train/test net protocol buffer definition
+net: "caffe_NN/trainval.prototxt"
+
+test_iter: 150
+test_interval: 1000
+
+base_lr: 0.02
+momentum: 0.001
+lr_policy: "inv"
+gamma: 0.0001
+power: 0.75
+display: 1000
+max_iter: 100000
+
+weight_decay: 0.0001
+
+snapshot: 100000
+snapshot_prefix: "caffe_NN/citations"
+solver_mode: CPU

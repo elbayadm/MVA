@@ -1,0 +1,190 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,graphicx,subfig,bbm}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage[left=2.5cm,right=2.5cm,top=3cm,bottom=3cm]{geometry}
+
+
+
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf Deep Learning: Homework 1}
+\cfoot{\thepage}
+
+\newtheoremstyle{exo}%
+{\topsep}{\topsep}%
+{}{}%
+{\bfseries}{}%
+{\newline}%
+{\thmname{#1}\thmnumber{ #2}\thmnote{ #3}}
+\theoremstyle{exo}
+\newtheorem*{exercise}{}
+
+
+\title{[M2, MVA]\\ Deep Learning}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\p}{\mathbb{P}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+
+\renewcommand{\baselinestretch}{1.2}
+\newcommand{\indep}{\mathrel{\perp\mspace{-10mu}\perp}}
+\newcommand{\nindep}{\centernot{\indep}}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Homework 1}\\
+\today
+\vspace{10pt}
+\end{center}
+
+\vspace{7pt}
+
+\section{Analytical exercises}
+	\paragraph{1.}
+		Considering the 0/1 loss function $L(y,f(x))=1-\1[y=f(x)]$ the Expected prediction error takes the form:
+		\[EPE(f)=\mathbb E_x\left[\sum_yL(y,f(x)\p(y|x))\right]\]
+		It suffices to minimize the EPE pointwise, i.e consider:
+		\[\hat f(x)=\arg\min_g\sum_yL(y,g)\p(y|x)\]
+		Thus
+		\[\begin{split}
+		\hat f(x)&=\arg\min_g\sum_y\left(1-\1[y=g]\right)\p(y|x)\\
+		&=\arg\min_g\sum_{y\neq g}\p(y|x)\\
+		&=\arg\min_g 1-\p(g|x)\\
+		&=\arg\max_g \p(g|x)
+		\end{split}\]
+	\paragraph{2.}
+		Let us consider a pair of discrete r.v $X$ and $Y$ on sets $\X$ and $\Y$ respectively, such that $X\indep Y$.
+		\[\begin{split}
+		H(X,Y)&=-\sum_{x\in \X}\sum_{y\in \Y}\p(x,y)\log\p(x,y)\\
+		&=-\sum_{x\in \X}\sum_{y\in \Y}\p(x)\p(y)(\log\p(x)+\log\p(y))\\
+		&=-\sum_{x\in \X}\p(x)\log\p(x)\sum_{y\in \Y}\p(y)-\sum_{y\in \Y}\p(y)\log\p(y)\sum_{x\in \X}\p(x)\\
+		&=H(X)+H(Y)
+		\end{split}\]
+
+\section{Data modelling: PCA and K-means}
+	\subsection{PCA}
+		We perform the PCA on the training set and estimate the reconstruction error on the test set as:
+		\[E^{PCA}(D)=\sum_{n\in Testset}\|I_n-\left(\sum\limits_{d=1}^Dc_{n,k}e_k+m\right)\|_2\]
+		While varying $D$: the number of chosen eigenvectors with the largest magnitudes.
+		The results are shown below (figure \ref{PCA})
+		\begin{figure}[H]
+			\centering
+			\caption{Reconstruction error on test set vs train set\label{PCA}}
+			\includegraphics[width=10cm]{images/PCA_test.pdf}
+		\end{figure}
+
+	\subsection{K-means}
+		We run k-means algorithms on the ``7'' training set. The distortion keeps decreasing after each k-mean iteration (figure \ref{dstr} ). To avoid local minimas we run k-means different times with different initializations and keep the optimal clustering.
+
+		For $k=2$ we find the following centroids (figure \ref{centroids}) with some elements of each cluster shown in (figure \ref{sample})
+		\begin{figure}[H]
+			\centering
+			\caption{K-means Distortion minimization\label{dstr}}
+			\includegraphics[width=12cm]{images/km_dist.pdf}
+		\end{figure}
+
+		\begin{figure}[H]
+			\centering
+			\caption{K-means centroids k=2\label{centroids}}
+			\includegraphics[width=10cm]{images/km_centroids.pdf}
+		\end{figure}
+		\begin{figure}[H]
+			\centering
+			\subfloat[C1]{
+			\includegraphics[width=7cm]{images/km_c1.pdf}
+			}
+			\subfloat[C2]{
+			\includegraphics[width=7cm]{images/km_c2.pdf}
+			}
+			\caption{Samples from each cluster - k=2\label{sample}}
+		\end{figure}
+		We repeat the same process for $k\in\{3,4,5,10,50,100\}$, the optimal distortion of each model achieved on the train set is shwon in (figure \ref{dist}) we also evaluate the distortion on the test set for comparison with PCA.
+		\[E^{KM}(k)=\sum_{n\in Testset}\|I_n-c^{\text{affect}(n)}\|_2\]
+		\begin{figure}[H]
+			\centering
+			\caption{K-means distortion on train set and test set\label{dist}}
+			\includegraphics[width=12.5cm]{images/km_train_test.pdf}
+		\end{figure}
+		We note that PCA \& k-means perform quite similarly on the train set, but k-means fails to generalize to unseen data while PCA does well. However, k-means is sparser (ntest images $\Rightarrow$ ntest parameters) compared to PCA which is more of a dimensionality reduction technique (this explain the lower error on the test set) and with D chosen eigenvectors we'll have $ntest\times D$ parameters.
+\section{Ising model: MCMC \& learning}
+	\subsection{Part-1: Brute-force evaluations}
+		We consider an Ising model on $N\times N$ lattice with N=4. We generate all possible states ($2^{N^2}$)and evaluate the energy at each state $x$ following the formula:
+		\[E(x,J)=\sum_{(i,j)\in\mathcal E}x_ix_j=-\frac{J}{2}x^T\mathbf Ax\] 
+		Where $J\in\R$ and $\mathcal E$ the edges of the network with given incidence matrix $\mathbf A$.
+		Each state $x$ occurs with a probability:
+		\[P(x,J)=\dfrac{1}{Z}\exp(-E(x,J))\]
+		with the partition function $Z=\sum_x\exp(-E(x,J))$.\\
+		(Figure \ref{minmax}) shows the states with the lowest and largest energy and the probability of each state is given in (figure \ref{proba}).
+			
+		\begin{figure}[H]
+			\centering
+			\caption{States Probabilities\label{proba}}
+			\includegraphics[width=13cm]{images/Boltzmann_pstates.pdf}
+		\end{figure}
+		\begin{figure}[H]
+			\centering
+			\caption{Minimum and maximum energy states\label{minmax}}
+			\includegraphics[width=9cm]{images/Boltzmann_minmax.pdf}
+		\end{figure}
+
+		We compute the expectation of each feature $\phi_k(x),\:k=1,..,K$ under the studied model:
+		\[E_x^{P_J}=\sum_x\p(x,J)\phi_k(x)\]
+		Knowing that $\phi_k(x)=x_ix_j$ for $e_k=(i,j)\in\mathcal E=\{e_1,...e_K\}$. The results are shown in (figure \ref{feat})
+		\begin{figure}[H]
+			\centering
+			\caption{Features expectation - Brute force\label{feat}}
+			\includegraphics[width=10cm]{images/Boltzmann_expect.pdf}
+		\end{figure}
+	\subsection{Part-2: MCMC evaluations}
+		We use Gibbs sampling to obtain a sample of $n=4000$ states then estimate the expectation of each feature as:
+		\[E_k^{MC}(n)=\frac{1}{n}\sum_{i=1}^n\phi_k(x_i)\]
+		(Figure \ref{evolMC}) shows the evolution of the expectation while growing the sample and a final comparison to the brute force expectations of the previous section is shown in (figure \ref{finalMC}).
+		\begin{figure}[H]
+			\centering
+			\subfloat[Features expectation - Brute force vs MC\label{finalMC}]{
+			\includegraphics[width=8cm]{images/gibbs_1.pdf}
+			}
+			\subfloat[Features expectation - MC's growing sample\label{evolMC}]{
+			\includegraphics[width=8cm]{images/gibbs_iter.pdf}
+			}
+		\end{figure}
+	\subsection{Part-3: Parameter Estimation}
+		In this part we would like to estimate the value of $J$ most likely responsible for given values of $E^{P_J}$.\\
+		Hence we will maximize $\log \p_J(X)$ where $X=\{x_1,..x_N\}$ is the training sample.\\
+		To do so we use gradient ascent:
+		\[J:=J-\delta \frac{\partial \log \p_J(X)}{\partial J}\]
+		Where $\delta$ is a learning rate.\\
+		Given that:
+		\[\log \p_J(X)=-ı\log Z+\sum_n^Nw\phi(x_n),\:\:Z=\sum_x\exp(w\phi(x))\]
+		Where $w=-J$ and $\phi(x)=\sum\limits_{e=(i,j)\in\mathcal E}x_ix_j$
+		\[\begin{split}
+		\frac{\partial \log \p_J(X)}{\partial J}&=\sum_{n=1}^N\phi(x_n)-\frac{N}{Z}\sum_x\phi(x)\exp(w\phi(x))\\
+		&=N(<\phi>_{emp}-<\phi>_{\p_J})
+		\end{split}\]
+		Hence the update:
+		\[J:=J-\delta(<\phi>_{emp}-<\phi>_{\p_J})\]
+		\textbf{Results:} starting from J=.5 we reach maximum likelihood at $J=.6993$, The J updates are shown in (figure \ref{jtrack}). (Figure \ref{estim:update}) shows the features expectations $<x_ix_j>_{emp}$ after each gradient ascent step until optimal solution is found (figure \ref{estim:final}).
+		\begin{figure}[H]
+			\centering
+			\caption{J gradient ascent\label{jtrack}}
+			\includegraphics[width=13cm]{images/Jtrack.pdf}
+		\end{figure}
+		\begin{figure}[H]
+			\centering
+			\subfloat[Expectations at each iteration\label{estim:update}]{
+			\includegraphics[width=8cm]{images/estim_updates.pdf}
+			}
+			\subfloat[Estimated expectations vs desired expectations\label{estim:final}]{
+			\includegraphics[width=8cm]{images/estim_final.pdf}
+			}
+		\end{figure}
+\end{document}

@@ -1,0 +1,19 @@
+# The train/test net protocol buffer definition
+net: "models/morpho/Qmorpho_trainval.prototxt"
+
+test_iter: 100
+test_interval: 100
+
+base_lr: 0.00001
+lr_policy: "fixed"
+max_iter: 2500
+
+momentum: 0.95
+weight_decay: 0.00001
+
+display: 100
+average_loss: 100
+
+snapshot: 1000
+snapshot_prefix: "snaps/multi_001/Q"
+solver_mode: CPU

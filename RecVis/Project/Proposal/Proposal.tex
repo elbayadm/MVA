@@ -1,0 +1,44 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,graphicx,verbatim,float,microtype,cite}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[left=2.5cm,right=2.5cm,top=0cm,bottom=2cm]{geometry}
+\usepackage[none]{hyphenat}
+\usepackage[justification=centering]{caption}
+
+
+\title{[M2, MVA]\\ Object recognition and computer vision}
+\date{}
+\pagenumbering{gobble}
+\thispagestyle{empty}
+
+\renewcommand{\baselinestretch}{1.2}
+
+\begin{document}
+\maketitle
+\vspace{-30pt}
+\begin{center}
+{\huge \bf Project proposal}\\
+\today \\
+\vspace{5pt}
+\textbf{Theme:} Deep learning \\
+\textbf{Topic:} Training convolutional networks with noisy labels\\
+\textbf{Group:} Maha ELBAYAD.
+\end{center}
+
+\section*{Task 1: Paper review}
+For this project we will review the reference article \textbf{Training convolutional networks with noisy labels} \cite{Sukhb} which adapts a convolutional neural network to deal with mislabeled training samples. Those mislabels could either be \textbf{label flips} or \textbf{outliers}, potentially misleading the network in the training phase.
+
+\section*{Task 2: Code implementation}
+We will implement in Caffe's bvlc framework the suggested constrained linear noise layer in \cite{Sukhb} on top of the reference implementation of the ConvNet proposed by Krizhevsky, Sutskever, and Hinton in their NIPS 2012 paper (AlexNet)\cite{imagenet}. 
+
+\section*{Task 3: Experimental evaluation} 
+To evaluate the suggested method we will train our network on simulated noisy datasets generated from the imagenet database with known true labels. For a more realistic setting we will use the CASIA WebFace Database to classify images with or without glasses. The training labels would be generated automatically with a \textit{glasses detector} using histogram of oriented gradients (out of the project scope). Hence we'll challenge the method with a simple binary classification where the probability of a noisy label is dependent on the image features to test  the assumption $p(\text{noisy label}= j|\text{true label} = i) = q_{i,j}$ \cite{Sukhb}.
+\begin{thebibliography}{2}
+\bibitem{Sukhb}Training Convolutional Networks with Noisy Labels, Sainbayar Sukhbaatar, Joan Bruna, Manohar Paluri, Lubomir Bourdev, and Rob Fergus - arXiv:1406.2080
+
+\bibitem{imagenet} Krizhevsky, Alex, Sutskever, Ilya, and Hinton, Geoffrey E. Imagenet classification with deep convolutional
+neural networks. In Advances in Neural Information Processing Systems 25, pp. 1097–1105, 2012.
+\end{thebibliography}
+
+\end{document}
+

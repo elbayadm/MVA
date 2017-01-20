@@ -1,0 +1,467 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,graphicx,subfig}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage[left=2cm,right=2cm,top=3cm,bottom=3cm]{geometry}
+\usepackage{multirow}
+
+% \addtolength{\evensidemargin}{-.5in}
+% \addtolength{\oddsidemargin}{-.5in}
+% \addtolength{\textwidth}{0.8in}
+% \addtolength{\textheight}{0.6in}
+% \addtolength{\topmargin}{-.3in}
+
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf RecVis- A2}
+\cfoot{\thepage}
+
+\newtheoremstyle{exo}%
+{\topsep}{\topsep}%
+{}{}%
+{\bfseries}{}%
+{\newline}%
+{\thmname{#1}\thmnumber{ #2}\thmnote{ #3}}
+\theoremstyle{exo}
+\newtheorem*{exercise}{Q}
+
+
+\title{[M2, MVA]\\ Object recognition and computer vision}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\1}{\mathbf{1}}
+\newcommand{\0}{\mathbf{0}}
+
+\renewcommand{\baselinestretch}{1.2}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Assignement 2}\\
+\today
+\vspace{10pt}
+\end{center}
+
+\vspace{7pt}
+
+\section*{Part 1: Training and testing an Image Classifier}
+\subsection*{Stage A}
+\begin{exercise}[A1]
+	The concatened histograms over spatial tiles represent a sort of semi-local features, in fact, if the histograms allow for more stability against image deformation, tiling neutralize the potential loss of spatial information.
+\end{exercise}
+
+\subsection*{Stage B}
+\begin{exercise}[B1]
+	Top ranked images from the training set:
+	\begin{figure}[H]
+	\centering
+	\includegraphics[width=15cm]{images/rank_train_aeroplane.pdf}
+	\end{figure}
+\end{exercise}
+
+\begin{exercise}[B2]
+	Patches of the most relevant visual words on the top scored training image are shown in the figures below. As expected, the patches are for recurrent background elements \{sky, horizon, mountain, clouds...\} which are not exclusive to the positively labelled training images.
+	\begin{figure}[H]
+	\centering
+	\includegraphics[width=17cm]{images/train_aeroplane_word1.pdf}
+	\end{figure}
+	\begin{figure}[H]
+	\centering
+	\includegraphics[width=17cm]{images/train_aeroplane_word2.pdf}
+	\end{figure}
+	\begin{figure}[H]
+	\centering
+	\includegraphics[width=17cm]{images/train_aeroplane_word3.pdf}
+	\end{figure}
+\end{exercise}
+
+\subsection*{Stage C}
+\begin{exercise}[C1]
+	Since we're only comparing the test scores, the bias term would only translate them by a constant, not affecting the order.
+\end{exercise}
+
+\subsection*{Stage D}
+\begin{exercise}[D1]
+	The AP performance for the three categories is as exepected seeing the distibution of the datasets; in fact, for the \textit{person} category, even a random classifier can perform well as the training/testing sets are balanced compared to the unbalanced sets of \textit{motorbike} and \textit{aeroplane}.
+	\begin{table}
+	\centering
+	\caption{Test performances}
+	\begin{tabular}{||c|c|c||}
+	\hline
+	Category & Testing classes (+)/(-) & Test AP\\
+	\hline
+	Aeroplanes & 126/1077 &0.55\\
+	Motorbikes & 125/1077 & 0.48\\
+	Person & 983/1077 &0.71\\
+	\hline
+	\end{tabular}
+	\end{table}
+
+	\begin{figure}[H]
+	\centering
+	\caption{Top ranked images - category \textit{aeroplane}}
+	\includegraphics[width=15cm]{images/rank_test_aeroplane.pdf}
+	\end{figure}
+
+
+	\begin{figure}[H]
+	\centering
+	\caption{Top ranked images - category \textit{motorbike}}
+	\includegraphics[width=15cm]{images/rank_test_motorbike.pdf}
+	\end{figure}
+
+	\begin{figure}[H]
+	\centering
+	\caption{Top ranked images - category \textit{person}}
+	\includegraphics[width=15cm]{images/rank_test_person.pdf}
+	\end{figure}
+
+
+	\begin{figure}[H]
+	\centering
+	\caption{PR curves}
+	\subfloat[Aeroplane]{
+	\includegraphics[height=6cm,trim=3cm 0cm 3.5cm .5cm,clip]{images/pr_test_aeroplane.pdf}
+	}
+	\subfloat[Motorbike]{
+	\includegraphics[height=6cm,trim=3.7cm 0cm 3.5cm .5cm,clip]{images/pr_test_motorbike.pdf}
+	}
+	\subfloat[Person]{
+	\includegraphics[height=6cm,trim=3.7cm 0cm 3.5cm 0cm,clip]{images/pr_test_person.pdf}
+	}
+	\end{figure}
+\end{exercise}
+
+\begin{exercise}[D2]
+	The rank of the first false positive is $\mathbf 1$.\\
+	This false positive corresponds to the second point of the PR-curve at $(r=0,p=0)$ after the assumed starting point $(r=0,p=1)$
+\end{exercise}
+
+\subsection*{Stage E}
+\begin{exercise}[E1]
+	The performance is deteriorating while the PR-curves keep on approximately the same shape. This lower performance is expected as we do not learn from on any global or semi-global feature.
+	\begin{table}[H]
+	\centering
+	\caption{Test performances without spatial tiling}
+	\begin{tabular}{||c|c|c||}
+	\hline
+	Category & w/o tiling AP & w/ tiling\\
+	\hline
+	Aeroplanes &0.51 & 0.55\\
+	Motorbikes & 0.41 & 0.48\\
+	Person  &0.70 & 0.71\\
+	\hline
+	\end{tabular}
+	\end{table}
+	\begin{figure}[H]
+	\centering
+	\caption{PR curves}
+	\subfloat[Aeroplane]{
+	\includegraphics[height=6cm,trim=3cm 0cm 3.5cm 0cm,clip]{images/rs_pr_test_aeroplane.pdf}
+	}
+	\subfloat[Motorbike]{
+	\includegraphics[height=6cm,trim=3.7cm 0cm 3.5cm 0cm,clip]{images/rs_pr_test_motorbike.pdf}
+	}
+	\subfloat[Person]{
+	\includegraphics[height=6cm,trim=3.7cm 0cm 3.5cm 0cm,clip]{images/rs_pr_test_person.pdf}
+	}
+	\end{figure}
+\end{exercise}
+
+
+\begin{exercise}[E2]
+	We change the norm from $L2$ to $L1$ then to no norm at all. The most performant norm for SVM classification on the given problem is $L2$.
+	\begin{table}[H]
+	\centering
+	\caption{Impact of normalization}
+	\begin{tabular}{||c|c|c|c||}
+	\hline
+	Category &$L2$ & $L1$ & $\varnothing$\\
+	\hline
+	Aeroplanes & 0.55 & 0.52 & 0.62\\
+	Motorbikes & 0.48 & 0.25 &  0.48 \\
+	Person & 0.71 & 0.56 & 0.67 \\
+	\hline
+	\end{tabular}
+	\end{table}
+\end{exercise}
+
+
+\begin{exercise}[E3]
+	Using the linear kernel $K(h,h')=\sum\limits_{i=1}^dh_ih'_i$ and for BoVW histograms $h$ and $h'$ that are $L2$ normalized:
+	\begin{equation} 
+	\label{L2}
+	K(h,h)=\|h\|^2_2=1
+	\end{equation} 
+	And via C.S inequality $|K(h,h')|\leq \|h\|_2.\|h'\|_2=1$.\\
+	The equality \ref{L2} doesn't hold for $L1-$normalized or unnormalized histograms.
+\end{exercise}
+
+\begin{exercise}[E4]
+	With $L2$ normalization, the dot products used in SVM $K(h,h')$ are equal to $cosine(h,h')$  i.e they reflect similarities between histograms.
+\end{exercise}
+
+\subsection*{Stage F}
+\begin{exercise}[F1]
+	For a histogram $h$, the new histogram adapted for the Hellinger kernel would be $h:=\sqrt{h}$. After this transformation we should $L2-$normalize the new $h$
+\end{exercise}
+
+\begin{exercise}[F2]
+	This procedure is equivalent to using the Hellinger kernel as we're explicitly mapping the features to the new space associated to the kernel instead of using the kernel trick.
+\end{exercise}
+
+\begin{exercise}[F3]
+	One advantage of using a linear classifier would be the ease to interpret the linear decision boundary. And from a computation point of view, solving the optimisation problem for a linear kernel is less costly. 
+\end{exercise}
+
+\begin{exercise}[F4]
+	We compare the AP- test performance of the post-normalization (after root-squaring) to this of the alternative pre-normalization:
+		\begin{table}[H]
+		\centering
+		\caption{AP - Test performances}
+		\begin{tabular}{||c|c|c||}
+		\hline
+		Category & post-normalization $\checkmark$ & pre-normalization\\
+		\hline
+		Aeroplanes & 0.71 & 0.64\\
+		Motorbikes & 0.63 & 0.53\\
+		Person &  0.77 & 0.71\\
+		\hline
+		\end{tabular}
+		\end{table}
+\end{exercise}
+
+\subsection*{Stage G}
+\begin{exercise}[G1]
+	We assess our algorithm performance with regard to the size of the training set. The curves of AP on test set (same size) are shown on the figures below for the three categories using the linear kernel and the Hellinger kernel.
+	\begin{figure}[H]
+	\centering
+	\subfloat[Linear kernel]{
+	\includegraphics[width=8cm,clip]{images/linear_fractions.pdf}
+	}
+	\subfloat[Hellinger kernel]{
+	\includegraphics[width=8cm,clip]{images/hellinger_fractions.pdf}
+	}
+	\end{figure}
+\end{exercise}
+
+\begin{exercise}[G2]
+From the tendancy of the curves on both kernels for all three categories, the performance doesn't seem near saturation. Thus we can assume that growing the training set wouldn't hurt.
+\end{exercise}
+
+\section*{Part 2: Training an Image Classifier for Retrieval using Internet image search}
+\begin{exercise}[P2.1]
+	For our \textit{horses} classifier the 10 training images are shown below. The AP on test set with 5 then 10 images indicates that we can improve the classifier performance with more images.
+	\begin{figure}[H]
+		\caption{First 5}
+		\centering
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse1.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse2.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse3.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse4.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse5.jpg}
+		}
+	\end{figure}
+
+	\begin{figure}[H]
+		\caption{Second 5}
+		\centering
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse6.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse7.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse8.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse9.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/horses/horse10.jpg}
+		}
+	\end{figure}
+
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{||c|c|c||}
+		\hline
+		Training set size & Precision at rank-36 & test AP\\
+		\hline
+		5 & 10 & 0.16\\
+		10 & 9 & 0.22 \\
+		15 & 10 & 0.23\\
+		20 & {\color{Emerald}13} & 0.27\\
+		33 & 12 & 0.23\\
+		\hline
+		\end{tabular}
+	\end{table}
+\end{exercise}
+
+\begin{exercise}[P2.2]
+	The best performane we achieved on the \textit{horse} classifier was of Precision at rank-36=13 with 20 images at the training set. The top 36 scored images are shown below
+	\begin{figure}[H]
+		\caption{TOP 36 scored images on the test set - \textit{horse} classifier -20 images}
+		\centering
+		\includegraphics[width=15cm]{images/top36_horses.pdf}
+	\end{figure}
+	For the \textit{cars} category, some of the training images are shown in figure \ref{cars}.
+	\begin{figure}[H]
+		\caption{Training set - Cars \label{cars}}
+		\centering
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car1.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car2.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car3.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car4.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car5.jpg}
+		}
+		\\
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car6.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car7.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car8.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car9.jpg}
+		}
+		\subfloat{
+		\includegraphics[height=2cm,clip]{code/data/myImages/cars/car10.jpg}
+		}
+	\end{figure}
+	The task seems easier with cars, as the precision at rank 36 is promising. The top scored images are shown below. We can see from the top ranked images of both categories, that \textit{horses} are more difficult to categorize as they're similar to  other animal categories \{cows, dogs, birds...\} or even leather objects. On the other hand, \textit{cars} have distinctive geometry and the misclassifications are not surprising.
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{||c|c|c||}
+		\hline
+		Training set size & Precision at rank-36 & test AP\\
+		\hline
+		5 & 20 & 0.44\\
+		10 & {\color{Emerald}28} & 0.47 \\
+		15 & 26 & 0.47\\
+		20 & 27 & 0.48\\
+		\hline
+		\end{tabular}
+	\end{table}
+	\begin{figure}[H]
+		\caption{TOP 36 scored images on the test set - \textit{car} classifier -10 images}
+		\centering
+		\includegraphics[width=15cm]{images/top36_cars.pdf}
+	\end{figure}
+\end{exercise}
+
+
+\subsection*{Stage H}
+\begin{exercise}[H.1]
+	The VLAD vector has dimension $K_{VLAD}\times D$ where $D$ is the dimension of the SIFT descriptors and $K$ the number of clusters. The BoVW vector has dimension $K_{BoVW}$ (bins $\sim$ clusters) if the spatial tiling is omitted, otherwise it's $K_{BoVW}\times|tiles|$. For identical dimensions we use $K_{BoVW}=\dfrac{K_{VLAD}\times D}{|tiles|}$ 
+\end{exercise}
+
+\begin{exercise}[H.2]
+	We train the SVM classifier on the three different categories with the linear kernel then the Hellinger kernel. 
+	\begin{table}[H]
+		\centering
+		\caption{AP on test sets: VLAD vs. BoVW}
+		\begin{tabular}{|c|c|c|c|c|}
+		\cline{3-5}
+		\multicolumn{2}{c|}{} & aeroplane & motorbike & person\\
+		\hline
+		\multirow{2}{*}{Linear} & BoVW & 0.55 & 0.48 & 0.71\\
+		\cline{2-5}
+		&VLAD & 0.75 & 0.69 & 0.76\\
+		\hline
+		\hline
+		\multirow{2}{*}{Hellinger} & BoVW & 0.71 & 0.63 & 0.77\\
+		\cline{2-5}
+		&VLAD & 0.07 & 0.07 &0.55\\
+		\hline
+		\end{tabular}
+	\end{table}
+	The VLAD encoding outperfom BoVW with linear kernel SVM classification, nonetheless, the Hellinger kernel is obviously a bad choice of kernel on the VLAD space.
+\end{exercise}
+
+\subsection*{Stage I}
+\begin{exercise}[I.1]
+	In this part, we compare the FV encoding to the previous two:
+		\begin{table}[H]
+			\centering
+			\caption{AP on test sets: VLAD vs. BoVW}
+			\begin{tabular}{|c|c|c|c|c|}
+			\cline{3-5}
+			\multicolumn{2}{c|}{} & aeroplane & motorbike & person\\
+			\hline
+			\multirow{3}{*}{Linear} & BoVW & 0.55 & 0.48 & 0.71\\
+			\cline{2-5}
+			&VLAD & 0.75 & 0.69 & 0.76\\
+			\cline{2-5}
+			&FV & 0.70 & 0.73 & 0.77\\
+			\hline
+			\hline
+			\multirow{3}{*}{Hellinger} & BoVW & 0.71 & 0.63 & 0.77\\
+			\cline{2-5}
+			&VLAD & 0.07 & 0.07 &0.55\\
+			\cline{2-5}
+			&FV & 0.07 & 0.10 & 0.52\\
+			\hline
+			\end{tabular}
+		\end{table}
+	 The VF encoding surpasses the VLAD on the \textit{motorbike} and \textit{person} classes while it's slightly less performant then VLAD on the class \textit{aeroplane}.\\
+	 Same remark as for VLAD regarding the Hellinger kernel.
+\end{exercise}
+
+
+\begin{exercise}[I.2]
+The VLAD vector is a non-probabilistic version of of the Fisher vector with half the dimension ($(K\times D)$ instead of $(2D + 1)\times K − 1$). Hence for a large number of images, or a large dimensionality we can favorise the VLAD over a small loss of AP. Besides, inlcuding a second order statitic is computation costly.
+\end{exercise}
+
+\begin{exercise}[I.2]
+	We vary the regularization parameter $C$ (.1 1 3 10 30 100 300 1000) and assess the performance on both the training and test set to choose C yielding the best score on the test set (doesn't allow overfitting the training set). The results are shown on the curves below. We note that each category has a different optimal $C$ and that even with tuning, VLAD and FV still outperform BoVW.
+	
+	\begin{figure}[H]
+		\centering
+		\caption{AP curves - train vs test}
+		\subfloat[Aeroplane]{
+		\includegraphics[height=7cm,clip]{images/cv_aeroplane.pdf}
+		}
+		\subfloat[Motorbike]{
+		\includegraphics[height=7cm,clip]{images/cv_motorbike.pdf}
+		}
+		\\
+		\subfloat[Person]{
+		\includegraphics[height=7cm,clip]{images/cv_person.pdf}
+		}
+		
+		\end{figure}
+	\end{exercise}
+\end{document}
+
+

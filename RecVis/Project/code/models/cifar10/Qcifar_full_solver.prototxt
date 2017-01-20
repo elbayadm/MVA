@@ -1,0 +1,17 @@
+# The train/test net protocol buffer definition
+net: "/Users/redgns/GitHub/git-MVA/RecVis/Project/code/models/cifar10/Qcifar_trainval.prototxt"
+
+test_iter: 100
+test_interval: 100
+
+base_lr: 0.00001
+momentum: 0.9
+weight_decay: 0.0001
+
+lr_policy: "fixed"
+display: 200
+max_iter: 5000
+snapshot: 1000
+
+snapshot_prefix: "snaps/cifar_NL06/Q"
+solver_mode: CPU

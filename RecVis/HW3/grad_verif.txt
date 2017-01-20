@@ -1,0 +1,53 @@
+
+grad_s_Wi_approx =
+
+    2.2480   -0.3206
+    0.3672   -0.0524
+    2.2613   -0.3225
+
+
+grad_s_Wo_approx =
+
+    1.8696    2.4402    1.2089
+
+
+grad_s_bi_approx =
+
+    0.9527
+    0.1556
+    0.9584
+
+
+grad_s_bo_approx =
+
+    0.9874
+
+
+grad_s_Wi =
+
+    2.2480   -0.3206
+    0.3672   -0.0524
+    2.2613   -0.3225
+
+
+grad_s_Wo =
+
+    1.8696    2.4402    1.2089
+
+
+grad_s_bi =
+
+    0.9527
+    0.1556
+    0.9584
+
+
+grad_s_bo =
+
+    0.9874
+
+For X=[2.3595,-0.3365] of label Y=-1
+Gradient etimation error on bo= 2.248e-11
+Gradient etimation error on Wo= 3.380e-10
+Gradient etimation error on bi= 2.521e-11
+Gradient etimation error on Wi= 3.395e-10

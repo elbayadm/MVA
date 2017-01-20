@@ -1,0 +1,432 @@
+\documentclass[10pt]{article}
+%-------------
+% SETTINGS
+%-------------
+	\usepackage{titlesec,enumitem,amsmath,amsthm,amssymb,amsfonts,fancyhdr,graphicx,subfig,footnote,float,braket,caption}
+	 \captionsetup{justification=centering, skip=1pt}
+	\usepackage[dvipsnames]{xcolor}
+	\usepackage{microtype}
+	\usepackage[left=2cm,right=2cm,top=2.5cm,bottom=2cm]{geometry}
+	\usepackage{hyperref}
+	\graphicspath{{../figures/}}
+	\setlength{\parindent}{0cm}
+%	\renewcommand*{\thefootnote}{(*)}
+	\renewcommand{\baselinestretch}{1.2}
+	\renewcommand\textbullet{\ensuremath{\bullet}}
+	\setlength{\headheight}{13.6pt}
+%-------------
+% TIKZ
+%-------------
+	\usepackage{tikz}
+	\usetikzlibrary{arrows,positioning}
+	\tikzstyle{state}=[draw, rectangle, fill=white, inner sep=2,outer sep=0, align=center]
+	\definecolor{col1}{RGB}{217,255,204} %Green
+	\definecolor{col2}{RGB}{204,243,255} %Blue
+	\definecolor{col3}{RGB}{250,142,142} %Red
+	\definecolor{col4}{RGB}{203,186,255} %Violet
+	\definecolor{col5}{RGB}{255,251,189} %Yellow
+	\definecolor{col6}{RGB}{219,219,219} %Gray
+	%--------------------------------------------------------------------------------------Styles:
+	\tikzstyle{conv}=[draw, fill=col1, align=left]
+	\tikzstyle{pool}=[draw, fill=col2, align=left]
+	\tikzstyle{trans}=[draw, fill=col6, align=center]
+	\tikzstyle{fc}=[draw, fill=col5, align=center]
+	\tikzstyle{loss}=[draw, fill=col3, align=left]
+	\tikzstyle{drop}=[draw, fill=col6, align=left]
+	%---------------------------------------------
+
+
+%-------------
+% STYLE
+%-------------
+	\renewcommand\thesection{\arabic{section}}
+	\titleformat{\section}{\normalfont\Large\bfseries}{Part \thesection .}{1em}{}
+	\pagestyle{fancy}
+	\lhead{Maha ELBAYAD}
+	\rhead{\bf Deep Learning: Final Assignment}
+	\cfoot{\thepage}
+
+
+
+	\title{[M2, MVA]\\ Deep Learning}
+	\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+	\date{}
+
+%------------------------
+% MATH
+% -----------------------
+	\newcommand{\p}{\mathbb{P}}
+	\newcommand{\e}{\mathbb{E}}
+	\newcommand{\R}{\mathbb{R}}
+	\newcommand{\X}{\mathcal{X}}
+	\newcommand{\Y}{\mathcal{Y}}
+	\newcommand{\indep}{\mathrel{\perp\mspace{-10mu}\perp}}
+	\newcommand{\nindep}{\centernot{\indep}}
+
+
+%------------------------
+% CONTENT
+% -----------------------
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Final Assignment}\\
+\today
+\vspace{10pt}
+\end{center}
+
+\vspace{7pt}
+
+\section{Personal research questions}
+	\paragraph{Question 1.1} the top-5 error rate is the fraction of test images for which the correct label is not among the five labels considered most probable by the model. In the case of big image category datasets (ImageNet with over 22k categories) many synset (sub-categories) within the same high-level category are subtle and confusing even for human annotators.
+
+	\paragraph{Question 1.2}  Data augmenation e.g rotating, translating, mirroring or illumination change artificially enlarges the training set and prevents over-fitting as it enhances the samples variance within the same class (in the context of classification problems). The resulting models are thus invariant to geometric and illumination transformations. The same goes for Data corruption e.g distorting and adding noise to the data helps the model generalization and improves its robustness to input noise.
+
+	\paragraph{Question 1.3} AdaGrad's optimization scheme gives frequently occurring features very low learning rates and infrequent features high learning rates. Hence it improves the convergence especially for sparse problems and it is likely to find more discriminative features and filters for the model. Concretely, it tunes the learning rate at each timestep regarding the history of the gradients for each feature dimension. The convergence is faster than with standard SGD but if the training data isn't variant enough, the monotonically decreasing learning rate of AdaGrad would stop learning too early.
+
+	\paragraph{Question 1.4} The authors incorporate the order of strokes into their framework by adopting a multi-channel model. The input sketch strokes are discretized into three sequential groups and the 6 compbinations are fed to the network. This way the CNN can learn the object's outline from the early strokes and give less weight to the detail strokes that come later. However, as most sketches start with some basic shapes (circles, ellipses, triagles) the first channel would mislead the learning.
+
+	\paragraph{Question 1.5} To deal with different sketching scales and abstraction levels the authors use an ensemble model with 5 CNN each trained on blurred images with variant levels. The penultimate layer (fully connected with 512 outputs) of all 5 networks are then concatenated and the Joint Bayesian method is used to learn a metric in the features space. The final classification is achieved with KNN matching on the learnt metric space. The simplest decision-level fusion strategy would be averaging the 5 softmax scores which will treat the networks equally. We can also feed the concatenated feature vector to a classifier say kernel-SVM or LDA. A boltzmann machine might also be used to learn the optimal aggregated feature.
+
+\section{Deep dreaming in MatConvNet }
+	\paragraph{Question 2.1}
+	Our objective function is $z=\|x^{(l+1)}\|_2^2=\braket{x^{(l+1)}|x^{(l+1)}}$.\\
+	Thus, the gradient with regard to $x^{(l+1)}$ is:
+	\[\frac{dz}{dx^{(l+1)}}=\braket{x^{'(l+1)}|x^{(l+1)}}+\braket{x^{(l+1)}|x^{'(l+1)}}=2x^{(l+1)}\]
+
+	\paragraph{Question 2.3} The last five layers \{\texttt{fc6, relu6, fc7, fc8, prob}\} are the fully connected layers which are encoded in matconvnet as convolution layers, plus a rectifier. \texttt{fc6} and \texttt{fc7} output 4096 neurons and the final \texttt{fc8} yields 1000 outputs (=$|$classes$|$) which are then treated with a softmax layer to get the probability of each class given the input as $\mathbb P(class=i|input)=\frac{\exp{x_i}}{\sum_{j}\exp{x_j}}$.
+
+	\paragraph{Question 2.4} We deep-dream on 3 different pictures with the vgg-16 at different layers and with a fixed step-size (:=1.5). Figures 1 to 5 illustrate the ascent on the norm of the target layer during 50 iterations of forward-backward updates.
+	\begin{figure}[H]
+	    \centering
+	    \subfloat[Original]{\includegraphics[width=112px,height=112px]{data/jurassic.jpg}}
+	    \subfloat[20 iterations]{\includegraphics[width=112px]{jurassic/N2/L3_oct1_iters20_vgg-16}}
+	    \subfloat[50 iterations]{\includegraphics[width=112px]{jurassic/N2/L3_oct1_iters50_vgg-16}}
+	    \subfloat[70 iterations]{\includegraphics[width=112px]{jurassic/N2/L3_oct1_iters70_vgg-16}}
+	 	\\
+	 	\subfloat[Objective function]{\includegraphics[width=8cm]{jurassic/N2/Optim_oct1_L3_vgg-16}}
+	    \caption{Image (1) - Layer 3 Step-size 1.5}
+	\end{figure}
+
+	\begin{figure}[H]
+	    \centering
+	    \subfloat[Original\label{jurassic}]{\includegraphics[width=112px,height=112px]{data/jurassic.jpg}}
+	    \subfloat[20 iterations]{\includegraphics[width=112px]{jurassic/N2/L7_oct1_iters20_vgg-16}}
+	    \subfloat[35 iterations]{\includegraphics[width=112px]{jurassic/N2/L7_oct1_iters35_vgg-16}}
+	    \subfloat[50 iterations]{\includegraphics[width=112px]{jurassic/N2/L7_oct1_iters50_vgg-16}}
+	 	\\
+	 	\subfloat[Objective function]{\includegraphics[width=8cm]{jurassic/N2/Optim_oct1_L7_iters50_vgg-16}}
+	    \caption{Image (1) - Layer 7 Step-size 1.5}
+	\end{figure}
+
+	\begin{figure}[H]
+	    \centering
+	    \subfloat[Original]{\includegraphics[width=112px,height=112px]{data/jurassic.jpg}}
+	    \subfloat[20 iterations]{\includegraphics[width=112px]{jurassic/N2/L15_oct1_iters20_vgg-16}}
+	    \subfloat[30 iterations]{\includegraphics[width=112px]{jurassic/N2/L15_oct1_iters30_vgg-16}}
+	    \subfloat[50 iterations]{\includegraphics[width=112px]{jurassic/N2/L15_oct1_iters50_vgg-16}}
+	 	\\
+	 	\subfloat[Objective function]{\includegraphics[width=8cm]{jurassic/N2/Optim_oct1_L15_iters50_vgg-16}}
+	    \caption{Image (1) - Layer 15 Step-size 1.5}
+	\end{figure}
+
+	\begin{figure}[H]
+	    \centering
+	    \subfloat[Original]{\includegraphics[width=112px,height=112px]{data/jurassic.jpg}}
+	    \subfloat[20 iterations]{\includegraphics[width=112px]{jurassic/N2/L24_oct1_iters20_vgg-16}}
+	    \subfloat[30 iterations]{\includegraphics[width=112px]{jurassic/N2/L24_oct1_iters30_vgg-16}}
+	    \subfloat[50 iterations]{\includegraphics[width=112px]{jurassic/N2/L24_oct1_iters50_vgg-16}}
+	 	\\
+	 	\subfloat[Objective function]{\includegraphics[width=8cm]{jurassic/N2/Optim_oct1_L24_iters50_vgg-16}}
+	    \caption{Image (1) - Layer 24 Step-size 1.5}
+	\end{figure}
+
+	\begin{figure}[H]
+	    \centering
+	    \subfloat[Original]{\includegraphics[width=112px,height=112px]{data/jurassic.jpg}}
+	    \subfloat[20 iterations]{\includegraphics[width=112px]{jurassic/N2/L34_oct1_iters20_vgg-16}}
+	    \subfloat[30 iterations]{\includegraphics[width=112px]{jurassic/N2/L34_oct1_iters30_vgg-16}}
+	    \subfloat[50 iterations]{\includegraphics[width=112px]{jurassic/N2/L34_oct1_iters50_vgg-16}}
+	 	\\
+	 	\subfloat[Objective function]{\includegraphics[width=8cm]{jurassic/N2/Optim_oct1_L34_iters50_vgg-16}}
+	    \caption{Image (1) - Layer 34 Step-size 1.5}
+	\end{figure}
+	We note that deepdreaming on the low level layers enhances the contrast and edges of the input image while deepdreaming on intermediate-level layers adds some patterns to the image without alternating the nature of the present objects while on the top-level layers the process tends to alter the image to match the categories the CNN was trained on, in this case 1000 imagenet synsets of mainly animals and plants.
+
+	When running the process for up to 50 iterations, the objective seems to converge and the output images are quite stabilized.
+
+	We can also tune the step-size, and generally with larger step the convergence is faster. However, since we normalize the gradient at each update, we're less sensible to the tuning of the step-size:
+	\[input:=input+step\frac{g}{norm(g)}\]
+	\begin{figure}[H]
+	    \centering
+	    \subfloat[step 1.5 - 20 iterations]{\includegraphics[width=112px]{jurassic/N2/L7_oct1_iters20_vgg-16}}
+	    \subfloat[step 2 - 20 iterations]{\includegraphics[width=112px]{jurassic/N2/L7_oct1_step40_iters20_vgg-16}}
+	    \vspace{15pt}
+	    \subfloat[step 4 - 20 iterations]{\includegraphics[height=112px]{jurassic/N2/Optim_oct1_L7_step40_iters20_vgg-16}}
+	    \caption{}
+	\end{figure} 
+	Other input images at different layers:
+	\begin{figure}[H]
+    	\centering
+
+    	\subfloat[original]{\includegraphics[width=112px,height=112px]{data/madmax}}
+    	\subfloat[Layer 8]{\includegraphics[width=112px]{madmax/N2/L8_oct1_step20_iters10_vgg-16}}
+    	\subfloat[Layer 17]{\includegraphics[width=112px]{madmax/N2/L17_oct1_step20_iters10_vgg-16}}
+    	\subfloat[Layer 23]{\includegraphics[width=112px]{madmax/N2/L23_oct1_step20_iters10_vgg-16}}
+    	\\
+    	\subfloat[original]{\includegraphics[width=112px,height=112px]{data/sound.jpeg}}
+    	\subfloat[Layer 8]{\includegraphics[width=112px]{sound/N2/L8_oct1_step20_iters10_vgg-16}}
+    	\subfloat[Layer 17]{\includegraphics[width=112px]{sound/N2/L17_oct1_step20_iters10_vgg-16}}
+    	\subfloat[Layer 23]{\includegraphics[width=112px]{sound/N2/L23_oct1_step20_iters10_vgg-16}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    	% \subfloat[]{\includegraphics[width=112px]{}}
+    \caption{}
+	\end{figure}
+	\paragraph{Question 2.5}
+	When giving the network an image with different size, the convolution layers still work fine except when they're intended to be fully connected layers as a matching of dimensions give the required output but when the inout size is different the matching doesn't hold.
+	\paragraph{Question 2.6} Instead of deepdreaming on the whole input image we process zoomed crops of the image. the crops are either picked randomly or in order following a grid.
+	\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{sound/N2/L23_crop_grid5_step20_iters10_vgg-16}
+    \caption{Layer 23 - Multi-channel crops on a 5x5 grid with zooming scale=2}
+	\end{figure}
+	\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{sound/N2/L17_crop_grid3_step20_iters10_vgg-16}
+    \caption{Layer 17 - Multi-channel crops on a 3x3 grid with zooming scale=2}
+	\end{figure}
+	We can also process the whole image at increasing scales as in the deep dreaming ipython notebook:
+	\begin{figure}[H]
+	    \centering
+	    \includegraphics[width=10cm]{sound/N2/L17_oct5_step20_iters10_vgg-16}
+	    \caption{Layer 17 - 5 octaves with zooming scale=1.2}
+		\end{figure}
+		\paragraph{Question 2.7} Rather than starting from a ntural image we can deepdream from a white noise. We experiment with different settings for zooming and blurring:
+		\begin{figure}[H]
+	    \centering
+	    \subfloat[original]{\includegraphics[width=112px,height=104px]{data/noise.jpg}}\vspace{5pt}
+	    \subfloat[L17 - straightforward]{\includegraphics[width=112px,height=112px]{noise/N2/raw/L17_oct1_step20_iters10_vgg-16}}\vspace{5pt}
+	    \subfloat[L17 - zooming 4 octaves]{\includegraphics[width=112px,height=112px]{noise/N2/raw/L17_oct4_step20_iters10_vgg-16}}
+	  %   \\
+	 	% \subfloat[L17 - straightforward blurring $\sigma=1$]{\includegraphics[width=112px,height=112px]{noise/N2/blur/L17_oct1_step20_iters10_vgg-16}}
+	 	% \vspace{5pt}
+	 	% \subfloat[L17 - zooming 4 octaves blurring $\sigma=1$]{\includegraphics[width=112px,height=112px]{noise/N2/blur/L17_oct4_step20_iters10_vgg-16}}
+	 	% \vspace{5pt}
+	 	% \subfloat[L17 - straightforward regularization $\lambda=.05$]{\includegraphics[width=112px,height=112px]{noise/N2/reg/L17_oct1_step20_iters10_vgg-16}}
+    \caption{Layer 17 - pool3}
+	\end{figure}
+ 
+	\begin{figure}[H]
+	    \centering
+	    \subfloat[straightforward]{\includegraphics[width=112px,height=112px]{noise/N2/raw/L27_oct1_step20_iters10_vgg-16}}\vspace{5pt}
+	    \subfloat[zooming 4 octaves]{\includegraphics[width=112px,height=112px]{noise/N2/raw/L27_oct4_step30_iters10_vgg-16}}
+	 	\vspace{5pt}    
+	    % \subfloat[straightforward regularization $\lambda=.05$]{\includegraphics[width=112px,height=112px]{noise/N2/reg/L27_oct1_step30_iters10_vgg-16_reg05}}
+	    % \\
+	 	\subfloat[zooming 4 octaves blurring $\sigma=.5$]{\includegraphics[width=112px,height=112px]{noise/N2/blur/L27_oct4_step30_iters10_vgg-16}}
+	 	\vspace{5pt}
+	 	%\subfloat[zooming 4 octaves regularization $\lambda=.05$]{\includegraphics[width=112px,height=112px]{noise/N2/reg/L27_oct4_step30_iters10_vgg-16}}
+	 	\caption{Layer 27 - conv5\_2}
+	\end{figure}
+	
+	\begin{figure}[H]
+	    \centering
+	 	\subfloat[zooming 8 octaves]{\includegraphics[width=112px,height=112px]{noise/N2/raw/L27_oct8_step30_iters10_vgg-16}}
+	 	\vspace{5pt}
+	 	\subfloat[zooming 8 octaves jittering$\{-8,8\}$]{\includegraphics[width=112px,height=112px]{noise/N2/jitter/L27_oct8_step30_iters10_vgg-16}}
+	    \caption{Layer 27 - conv5\_2}
+	\end{figure}
+
+\section{Personal experiments}
+\subsection{Experiment 2}
+\subsubsection{Single neurone}
+Instead of maximizing the N2 of the target layer we change the objective function to the activation of a subset of neurons from the target layer. We select a single class in the probabilities layer (37) to sort of visualize the DNN's perception of this category, especially when starting from random noise (with $\lambda=.03$ regularization). Although we expected a much more explicit perception of the class we end up most of the time with some characteristic patterns of the class even if the objective function is at its maximum (i.e 1).
+\begin{figure}[H]
+	    \centering
+	 	\subfloat[Neurone 944 (cucumber)]{\includegraphics[height=112px]{sound/neuron/L37(944)_oct1_step30_iters10_vgg-16}}
+	 	\vspace{5pt}
+	 	\subfloat[Neurone 954 (pineapple)]{\includegraphics[height=112px]{sound/neuron/L37(954)_oct1_step30_iters10_vgg-16}}
+\end{figure}	 
+\begin{figure}[H]	
+	 	\subfloat[Original]{\includegraphics[height=105px, width=112px]{data/earl.png}}
+	 	\vspace{5pt}
+	 	\subfloat[Neurone 255 (pug)]{\includegraphics[height=112px]{earl/neuron/L37(255)_oct1_step30_iters10_vgg-16}}
+	 	\vspace{5pt}
+	 	\subfloat[Neurone 964 (pizza)]{\includegraphics[height=112px]{earl/neuron/L37(964)_oct1_step30_iters10_vgg-16}}
+	 	\vspace{5pt}
+	 	\subfloat[Neurone 954 (pineapple)]{\includegraphics[height=112px]{earl/neuron/L37(954)_oct1_step30_iters10_vgg-16}}
+\end{figure}	
+\begin{figure}[H]
+	 	\subfloat[Original]{\includegraphics[height=105px, width=112px]{data/noise.jpg}}
+	 	\vspace{5pt}
+	 	\subfloat[Neurone 275 (dhole)]{\includegraphics[height=112px]{noise/neuron/L37(275)_oct1_step50_iters10_vgg-16}}
+	 	\vspace{5pt}
+	 	\subfloat[Neurone 939 (cauliflower)]{\includegraphics[height=112px]{noise/neuron/L37(939)_oct1_step50_iters10_vgg-16}}
+	 	\vspace{5pt}
+	 	\subfloat[Neurone 954 (pineapple)]{\includegraphics[height=112px]{noise/neuron/L37(954)_oct1_step50_iters10_vgg-16}}
+	 	\caption{Single neurone activation (with regularization)}
+\end{figure}	
+
+\subsubsection{Multiple layers}
+We can deep-dream on multiple layers by cumulating the gradients in the backpropagation step. Here are some results for combining 2 layers with different weight for each. We note that the result is a combination of simple deep-dreaming on respective layers and that the weights allow us to tune down the activation values of layers that tend to overshodw the rest.
+
+\begin{figure}[H]
+    \centering
+	\subfloat[1e-5 $\times$ layer 15 + 0.99999 $\times$ layer 31]{\includegraphics[width=7cm]{jurassic/sumN2/{L1e-05x15+0.99999x31_oct1_step30_iters10_vgg-16}.pdf}}
+	\vspace{5pt}
+	\subfloat[5e-5 $\times$ layer 15 + 0.99995 $\times$ layer 31]{\includegraphics[width=7cm]{jurassic/sumN2/{L5e-05x15+0.99995x31_oct1_step30_iters10_vgg-16}.pdf}}
+	\vspace{5pt}
+    \subfloat[1e-4 $\times$ layer 15 + 0.9999 $\times$ layer 31]{\includegraphics[width=7cm]{jurassic/sumN2/{L0.0001x15+0.9999x31_oct1_step30_iters10_vgg-16}.pdf}}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \subfloat[0.03 $\times$ layer 8 + 0.97 $\times$ layer 17]{\includegraphics[width=7cm]{madmax/sumN2/{L0.03x8+0.97x17_oct1_step15_iters10_vgg-16}.pdf}}
+	\vspace{5pt}
+	\subfloat[0.3 $\times$ layer 8 + 0.7 $\times$ layer 17]{\includegraphics[width=7cm]{madmax/sumN2/{L0.3x8+0.7x17_oct1_step30_iters10_vgg-16}.pdf}}
+	\vspace{5pt}
+	\subfloat[0.5 $\times$ layer 8 + 0.5 $\times$ layer 17]{\includegraphics[width=7cm]{madmax/sumN2/{L0.5x8+0.5x17_oct1_step30_iters10_vgg-16}.pdf}}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \subfloat[0.01$\times$ layer 8 + 0.99 $\times$ layer 23]{\includegraphics[width=7cm]{sound/sumN2/{L0.01x8+0.99x23_oct1_step30_iters10_vgg-16}.pdf}}
+    \vspace{5pt}
+    \subfloat[0.03 $\times$ layer 8 + 0.97 $\times$ layer 23]{\includegraphics[width=7cm]{sound/sumN2/{L0.03x8+0.97x23_oct1_step30_iters10_vgg-16}.pdf}}
+	\vspace{5pt}
+    \subfloat[0.1 $\times$ layer 8 + 0.9 $\times$ layer 23]{\includegraphics[width=7cm]{sound/sumN2/{L0.1x8+0.9x23_oct1_step30_iters10_vgg-16}.pdf}}
+	\vspace{5pt}
+	\subfloat[0.5 $\times$ layer 8 + 0.5 $\times$ layer 23]{\includegraphics[width=7cm]{sound/sumN2/{L0.5x8+0.5x23_oct1_step30_iters10_vgg-16}.pdf}}
+\caption{Multiple layers deep-dreaming}
+\end{figure}
+
+\subsubsection{Controlling dreams}
+We maximize the dot-products between activations of input image, and their best matching correspondences from the guide image.
+\begin{figure}[H]
+    \centering
+    \subfloat[Maximizing the N2]{\includegraphics[width=10cm]{earl/N2/L23_crop_grid3_step20_iters10_vgg-16}}
+
+    % \subfloat[Layer 23 - maximizing the dot prodcut]{\includegraphics[width=10cm]{earl/guide/L23(flowers)_crop_grid3_step20_iters10_vgg-16}}
+    % \subfloat[Guiding image]{\includegraphics[width=6cm]{data/flowers.jpg}}
+    \subfloat[Maximizing the dot product]{
+    \begin{tikzpicture}
+    \node (frame) at (-2,0) {\includegraphics[width=4cm]{data/flowers.jpg}};
+    \node (label1) at (-2,-2) {Guiding image};
+    \node (aer) at (5,0) {\includegraphics[width=8cm]{earl/guide/L23(flowers)_crop_grid3_step20_iters10_vgg-16}};
+    \draw[->,thick] (frame.east) -- (aer.west);
+	\end{tikzpicture}
+	}
+	
+	\subfloat[Maximizing the dot product]{
+    \begin{tikzpicture}
+    \node (frame) at (-2,0) {\includegraphics[width=4cm]{data/sky.jpg}};\label{sky}
+    \node (label1) at (-2,-2) {Guiding image};
+    \node (aer) at (5,0) {\includegraphics[width=8cm]{earl/guide/L23(sky)_crop_grid3_step20_iters10_vgg-16}};
+    \draw[->,thick] (frame.east) -- (aer.west);
+	\end{tikzpicture}
+	}
+    \caption{Layer 23 - relu4\_3}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \subfloat[Maximizing the N2]{\includegraphics[width=10cm]{jurassic/N2/L21_crop_grid3_step20_iters10_vgg-16}}
+
+    % \subfloat[Layer 23 - maximizing the dot prodcut]{\includegraphics[width=10cm]{earl/guide/L23(flowers)_crop_grid3_step20_iters10_vgg-16}}
+    % \subfloat[Guiding image]{\includegraphics[width=6cm]{data/flowers.jpg}}
+    \subfloat[Maximizing the dot product]{
+    \begin{tikzpicture}
+    \node (frame) at (-2,0) {\includegraphics[width=4cm]{data/flowers.jpg}};
+    \node (label1) at (-2,-2) {Guiding image};
+    \node (aer) at (5,0) {\includegraphics[width=8cm]{jurassic/guide/L21(flowers)_crop_grid3_step20_iters10_vgg-16}};
+    \draw[->,thick] (frame.east) -- (aer.west);
+	\end{tikzpicture}
+	}
+	
+	\subfloat[Maximizing the dot product]{
+    \begin{tikzpicture}
+    \node (frame) at (-2,0) {\includegraphics[width=4cm]{data/sky.jpg}};
+    \node (label1) at (-2,-2) {Guiding image};
+    \node (aer) at (5,0) {\includegraphics[width=8cm]{jurassic/guide/L21(sky)_crop_grid3_step20_iters10_vgg-16}};
+    \draw[->,thick] (frame.east) -- (aer.west);
+	\end{tikzpicture}
+	}
+    \caption{Layer 21 - relu4\_2}
+\end{figure}
+\subsection{Experiment 3}
+We import the caffe model \texttt{googlenet\_places205} trained on the MIT places database and use it to deepdream on some of its layers.
+\begin{figure}[H]
+    \centering
+    \subfloat[Layer 38 - inception\_3b\_output]{\includegraphics[width=8cm]{jurassic/N2/L38_oct4_step15_iters10_googlenet_places.pdf}}
+    \vspace{5pt}
+   \subfloat[Layer 53 - inception\_4a\_output]{\includegraphics[width=8cm]{jurassic/N2/L53_oct4_step15_iters10_googlenet_places.pdf}}
+    \vspace{5pt}
+    \subfloat[Layer 67 - inception\_4b\_output]{\includegraphics[width=8cm]{jurassic/N2/L67_oct4_step15_iters10_googlenet_places.pdf}}
+    \vspace{5pt}
+    \subfloat[Layer 81 - inception\_4c\_output]{\includegraphics[width=8cm]{jurassic/N2/L81_oct4_step15_iters10_googlenet_places.pdf}}
+    \vspace{5pt}
+\caption{Googlenet places205}
+\end{figure}
+After iterative zooming we can add space like patterns to the sky image (figure \ref{sky})
+\begin{figure}[H]
+    \centering
+    \subfloat[layer 53 - inception\_4a\_output]{\includegraphics[width=3.5cm]{sky_rot/N2/L53_oct6_step50_iters20_googlenet_places.pdf}}
+    \vspace{5pt}
+    \subfloat[layer 67 - inception\_4b\_output]{\includegraphics[width=3.5cm]{sky_rot/N2/L67_oct6_step50_iters20_googlenet_places.pdf}}
+    \vspace{5pt}
+    \subfloat[layer 81 - inception\_4c\_output]{\includegraphics[width=3.5cm]{sky_rot/N2/L81_oct6_step50_iters20_googlenet_places.pdf}}
+  %  \vspace{5pt}
+   % \subfloat[0.4 $\times$ layer 53 + 0.6$\times$ layer 81]{\includegraphics[width=3cm]{sky_rot/sumN2/{L0.4x53+0.6x81_oct6_step50_iters15_googlenet_places}.pdf}}
+    \caption{ 6 zoomings at scale=1.5 step=5 iterations=20}
+\end{figure}
+We apply the same process to any natural image (e.g figure \ref{jurassic}) with a large step to completely alter the image
+\begin{figure}[H]
+    \centering
+    \subfloat[layer 53 - inception\_4a\_output]{\includegraphics[width=5.5cm]{jurassic_average/N2/L53_oct6_step50_iters20_googlenet_places.pdf}}
+    \vspace{5pt}
+    \subfloat[layer 67 - inception\_4b\_output]{\includegraphics[width=5.5cm]{jurassic_average/N2/L67_oct6_step50_iters20_googlenet_places.pdf}}
+    \vspace{5pt}
+    \subfloat[layer 81 - inception\_4c\_output]{\includegraphics[width=5.5cm]{jurassic_average/N2/L81_oct6_step50_iters20_googlenet_places.pdf}}
+    \caption{ 6 zoomings at scale=1.2 step=5 iterations=20}
+\end{figure}
+
+\subsection{Experiment 4}
+We implement some of the suggested methods in ~\cite{yosinski2015understanding} \cite{simonyan2013deep} to regularize the optimization of the DNN's activation especially when starting from random noise as the main objective of the regularization is to incorporate natural-image priors in the optimization process. 
+\begin{itemize}
+\item The Gaussian blurring of width $\sigma$ that we apply every $\tau$ iterations.
+\item The L2 regularization of the input image by maximizing $(\text{activation}(x) -\theta \|x\|_2^2)$ where $x$ is our input image. Practically we multiply the image after the ascent by the scalar $1-\theta$.
+\item Clipping pixels with small norm: we set to zero pixels with norm (across the channels) inferior to $\gamma\times$ the mean norm of all pixels.
+\end{itemize} 
+\begin{figure}[H]
+    \centering
+    \subfloat[Flamingo - layer 142]{\includegraphics[width=3cm]{noise_flamingo/neuron/L142_oct1_step30_iters50_googlenet_places}}
+    \vspace{1pt}
+    \subfloat[Flamingo - layer 141]{\includegraphics[width=3cm]{noise_flamingo/neuron/L141_oct1_step30_iters50_googlenet_places}}
+    \vspace{5pt}
+    \subfloat[Pineapple - layer 142]{\includegraphics[width=3cm]{noise_ananas/neuron/L142_oct1_step30_iters50_googlenet_places}}
+    \vspace{1pt}
+    \subfloat[Pineapple - layer 141]{\includegraphics[width=3cm]{noise_ananas/neuron/L141_oct1_step30_iters50_googlenet_places}}
+    \vspace{5pt}
+
+    \subfloat[Teddy bear - layer 142]{\includegraphics[width=3cm]{noise_teddy/neuron/L142_oct1_step30_iters50_googlenet_places}}
+    \vspace{1pt}
+    \subfloat[Teddy bear - layer 141]{\includegraphics[width=3cm]{noise_teddy/neuron/L141_oct1_step30_iters50_googlenet_places}}
+    \caption{Regularization: $\theta=0.003$, $\tau=8$, $\sigma=0.7$, $\gamma=0.0001$, $step=3$, $iterations= 50$ - model : bvlc\_googlenet}
+\end{figure}
+%----------
+% Biblio
+%---------
+{\small
+\bibliographystyle{ieee}
+\bibliography{Bib}
+}
+\end{document}

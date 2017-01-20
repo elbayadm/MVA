@@ -1,0 +1,95 @@
+\documentclass[10pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,graphicx,subfig,bbm,verbatim,float,microtype,multirow,array}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage[none]{hyphenat}
+\usepackage[justification=centering]{caption}
+\graphicspath{{../figures/isnoisy/}}
+\setlength{\parindent}{0cm}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\0}{\mathbf{0}}
+\newcommand{\p}{\mathbb{P}}
+
+\renewcommand{\baselinestretch}{1.2}
+\newcolumntype{M}[1]{>{\raggedright}m{#1}}
+
+\begin{document}
+\begin{center}
+\sc\Large Noise prediction\\ {\small\today}
+\end{center}
+
+\section{Labelling}
+\begin{minipage}{.4\textwidth}
+Label = 0 if true label = noisy label = 0\\
+Label = 1 if true label = 1 \& noisy label = 0\\
+Label = 2 if true label = 0 \& noisy label = 1\\
+Label = 3 if true label = noisy label = 1\\
+\end{minipage}
+\begin{minipage}{.6\textwidth}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+class & \# training & \# test \\
+\hline
+noisy=true=0 & 3888 & 4353\\
+noisy=0 true=1 & 88 & 105\\
+noisy=1 true=0 & 50 & 62\\
+noisy=true=1 & 126  & 141\\
+\hline
+\end{tabular}
+\end{center}
+\end{minipage}
+\section{Accuracy and losses}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=16cm]{loss_acc}
+    \caption{}
+\end{figure}
+
+\section{ROC and PR - one vs all}
+\begin{figure}[H]
+    \centering
+    \subfloat[Adagrad]{\includegraphics[width=8cm]{roc_multiclass_ada}}
+    \subfloat[SGD]{\includegraphics[width=8cm]{roc_multiclass_sgd}}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=6cm]{pr_c0}\includegraphics[width=6cm]{pr_c1}\\
+    \includegraphics[width=6cm]{pr_c2}\includegraphics[width=6cm]{pr_c3}
+    \caption{Adagrad}
+\end{figure}
+
+\section{Confusion matrices}
+\textbf{Adagrad: }\\
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+true $\backslash$ predicted & n=t=0 & n=0, t=1 & n=1, t=0 & n=t=1\\
+\hline
+n=t=0    & 4347     &    4     &      2      &     0\\
+n=0, t=1 & 57       &   31     &      0      &    17\\
+n=1, t=0 & 58       &   0      &      2      &    2\\
+n=t=1    & 19       &   19     &      1      &   102\\
+\hline
+\end{tabular}
+\end{table}
+
+
+\textbf{SGD: }\\
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+true $\backslash$ predicted & n=t=0 & n=0, t=1 & n=1, t=0 & n=t=1\\
+\hline
+n=t=0     & 4331 &  8  & 10 &  4\\
+n=0, t=1  &  46  &  30 &  2 &  27\\
+n=1, t=0  &   52 &  1  &  6 &  3\\
+n=t=1     &   12 &  17 &  7 & 105\\
+\hline
+\end{tabular}
+\end{table}
+\end{document}

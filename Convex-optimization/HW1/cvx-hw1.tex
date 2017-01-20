@@ -1,0 +1,308 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr}
+\usepackage{microtype}
+
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.6in}
+\addtolength{\topmargin}{-.3in}
+
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf Convex optimization: Homework 1}
+\cfoot{\thepage}
+
+\newtheoremstyle{exo}%
+{\topsep}{\topsep}%
+{}{}%
+{\bfseries}{}%
+{\newline}%
+{\thmname{#1}\thmnumber{ #2}\thmnote{ #3}}
+\theoremstyle{exo}
+\newtheorem*{exercise}{Exercise}
+
+
+\title{[M2, MVA]\\ Convex Optimization, Algorithms and Applications}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\1}{\mathbf{1}}
+\newcommand{\0}{\mathbf{0}}
+
+\renewcommand{\baselinestretch}{1.2}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Homework 1}\\
+\today
+\vspace{15pt}
+\end{center}
+
+\vspace{10pt}
+
+
+\begin{exercise}[2.12 - Convex sets]
+
+(a) A slab $S=\{x\in\R^n|\:\alpha\leq a^Tx\leq \beta\}$\\
+\textbf{Convex}, since $S=\{x\in\R^n|\:\alpha\leq a^Tx\}\cap\{x\in\R^n|\:a^Tx\leq \beta\}$ is an intersection of two halfspaces.\\
+(b) A rectangle $R=\{x\in\R^n|\:\alpha_i\leq x_i\leq\beta_i,\:i=1...n\}$\\
+\textbf{Convex}, since $R=\bigcap\limits_{i=1}^n\left[\{x\in\R^n|\:\alpha_i\leq x_i\}\cap\{x\in\R^n|\:x_i\leq\beta_i\}\right]$ is a finite intersection of halfspaces.\\
+(c) A wedge $W=\{x\in\R^n|\:a_1^Tx\leq b_1,\:a_2^Tx\leq b_2\}$\\
+\textbf{Convex}, since it's an intersection of two halfspaces.\\
+(d) $C=\{x|\:\|x-x_0\|_2\leq\|x-y\|_2\text{ for all }y\in S\}$ where $S\subset \R^n$\\
+\textbf{Convex}, since:
+\[
+\begin{split}
+C&=\bigcap\limits_{y\in S}\{x|\:\|x-x_0\|_2\leq\|x-y\|_2\}\\
+&=\bigcap\limits_{y\in S}\{x|\:(x-x_0)^T(x-x_0)\leq(x-y)^T(x-y)\}\\
+&=\bigcap\limits_{y\in S}\{x|\:(y-x_0)^Tx\leq \frac{1}{2}(\|y\|_2^2-\|x_0\|_2^2)\}
+\end{split}
+\]
+is an intersection of halfspaces.\\
+\break
+(e) $C=\{x|\:dist(x,S)\leq dist(x,T)\}$ where $S,T\subset\R^n$\\
+\textbf{Not convex}, in fact:
+\[
+C=\bigcup\limits_{y\in S}\{x|\:\|x-y\|_2\leq \|x-t\|_2\:\forall t\in T\}
+\]
+As a reunion of convex sets (d), this set isn't generally convex.\\
+Let us consider in $\R$ the counterexample: $S=\{-a,a\}$ $(a>0)$ and $T=\{0\}$\\
+$C=\{x|\:x\geq\frac{a}{2}\}\cup\{x|\:x\leq-\frac{a}{2}\}$ is obviously not convex.\\
+(f) The set $S=\{x|\:x+S_2\subset S_1\}$ where $S_1,S_2\subset\R^n$ with $S_1$ convex.\\
+\textbf{Convex} as we can write:
+\[S=\bigcap\limits_{y\in S_2}\{x|x+y\in S_1\}=\bigcap\limits_{y\in S_2}\left[S_1-y\right]\]
+which is an intersection of the convex sets $[S_1-y]$, translations of the original convex $S_1$.\\
+(g) The set $S=\{x|\:\|x-a\|_2\leq\theta\|x-b\|_2\}$ where $a\neq b$ and $\theta\in[0,1]$\\
+\[S=\{x|\:(1-\theta^2)x^Tx-2(a-\theta^2b)^Tx+(a^Ta-\theta^2b^Tb)\leq0\}\]
+If $\theta=1$, S is a \textbf{convex} halfspace.\\
+If $\theta\neq 1$, $S=\{x^Tx-2u^Tx+\lambda\leq 0 \}$ where $u=\frac{1}{1-\theta^2}(a-\theta^2b)$ and $\lambda=\frac{a^Ta-\theta^2b^Tb}{1-\theta^2}$\\
+which is the \textbf{convex} ball of center $u$ and radius $R=(u^Tu-\lambda)^{1/2}$
+\end{exercise}
+
+\begin{exercise}[2.36 - Euclidean distance matrices]
+Let $\mathbb{EDM}$ denote the set of Euclidean distance matrices.\\
+$D\in\mathbb{EDM}\iff [D\in\mathbf S^n] \:\wedge\:[D_{ii}=0\: (\forall i)]\: \wedge \: [x^TDx\leq0\:\forall x\text{ with } \mathbf{1}^Tx=0]$\\
+Let $(e_1,...e_n)$ be the canonical basis of $\R^n$:
+\[\forall i=1...n,\:D_{ii}=0\iff e_i^TDe_i=0\iff [e_i^TDe_i\geq0\:\wedge\:e_i^TDe_i\leq0]\]
+\[\forall x\in (\mathbf 1)^{\perp}\:x^TDx=\sum_{i,j}x_ix_jD_{ij}\leq0\]
+Solving for $D$ is solving a system of homogenous linear inequalities, which has a convex cone $S$ as a solution space. Hence, $\mathbb{EDM}=S\cap\mathbf S^n$ is a convex cone.\\
+\textbf{The dual cone:}\\
+Given than\footnote{Using the Frobenius inner product on $\R^{n\times n}$: $\langle A,B\rangle=tr(A^TB)$}:
+\[
+\begin{split}
+\mathbb{EDM}&=\bigcap\limits_{\substack{i=1..n\\x\in\mathbf 1^\perp}}\{D\in\mathbf S^n|\:e_i^TDe_i\geq 0,\:e_i^TDe_i\leq 0,\:x^TDx\leq 0\}\\
+&=\bigcap\limits_{\substack{i=1..n\\x\in\mathbf 1^\perp}}\{D\in\mathbf S^n|\:\langle e_ie_i^T,D\rangle\geq 0,\:\langle e_ie_i^T,D\rangle\leq 0,\:\langle xx^T,D\rangle\leq 0\}
+\end{split}
+\]
+And that
+\[\mathbb{EDM}*=\{M|\:\langle M,D\rangle\geq0\:\forall D\in\mathbb{EDM} \}\]
+which is the set of every vector inward-normal to a hyperplane supporting the convex cone $\mathbb{EDM}$.\\
+\[
+\mathbb{EDM}^*=Co\left\{\bigcup\limits_{\substack{i=1..n\\x\in\mathbf 1^\perp}}\{e_ie_i^T,-e_ie_i^T,-xx^T\}\right\}
+\]
+\end{exercise}
+
+\begin{exercise}[3.21 - Pointwise maximum and supremum]
+(a) $f(x)=max_{i=1...k}\|A^{(i)}x-b^{(i)}\|$ where $A^{(i)}\in\R^{m\times n}$, $b^{(i)}\in\R^m$ and $\|.\|$ is a norm on $\R^m$\\
+$f$ is the pointwise maximum of the fonctions $f_i(x)=\|A^{(i)}x-b^{(i)}\|$ for $i=1..k$.\\
+$f_i$ is a convex function since it's the composition with an affine function of the norm (always convex).\\
+(b)  $f(x)=\sum\limits_{i=1}^r|x|_{[i]}$ where $|x|_{[1]},|x|_{[2]},..,|x|_{[n]}$ are the absolute values of the components of x, sorted in nonincreasing order.\\
+We can write f as:
+\[f(x)=max_{1\leq i_1<...<i_r\leq n}|x_{i_1}|+|x_{i_2}|+....+|x_{i_r}|\]
+which is a pointwise maximum of $n \choose r$ convex functions.
+\end{exercise}
+
+\begin{exercise}[3.32 - Products and ratios of convex functions]
+(a) \textit{If $f$ and $g$ are convex, both nondecreasing (or nonincreasing), and positive functions on an interval, then $fg$ is convex.} \\
+Checking Jensen's inequality for $x,y\in \R$ and $t\in[0,1]$:
+\[
+\begin{split}
+f(tx+(1-t)y)g(tx+(1-t)y)&\leq(tf(x)+(1-t)f(y))(tg(x)+(1-t)g(y))\text{\footnotesize\textit{    (f and g are convex)}}\\
+&=t^2f.g(x)+t(1-t)f(x)g(y)+t(1-t)g(x)f(y)+(1-t)^2f.g(y)\\
+&=tf.g(x)+(1-t)f.g(y)\\
+&+t(1-t)[f(x)g(y)+g(x)f(y)-f(x)g(x)-f(y)g(y)]\\
+&=tf.g(x)+(1-t)f.g(y)+t(1-t)(g(x)-g(y))(f(y)-f(x))
+\end{split}
+\]
+Given that $f$ and $g$ have the same monotony, $(g(x)-g(y))(f(y)-f(x))$ is negative.\\ Thus:
+\[
+f.g(tx+(1-t)y)\leq tf.g(x)+(1-t)f.g(y) \]
+(b) \textit{If f, g are concave, positive, with one nondecreasing and the other nonincreasing, then fg is concave.}\\
+\[
+\begin{split}
+f(tx+(1-t)y)g(tx+(1-t)y)&\geq(tf(x)+(1-t)f(y))(tg(x)+(1-t)g(y))\text{\footnotesize\textit{    (f and g are concave)}}\\
+&=tf.g(x)+(1-t)f.g(y)+t(1-t)(g(x)-g(y))(f(y)-f(x))\\
+\end{split}
+\]
+Given that $f$ and $g$ have opposite monotony, $(g(x)-g(y))(f(y)-f(x))$ is positive.\\ Thus:
+\[
+f.g(tx+(1-t)y)\geq tf.g(x)+(1-t)f.g(y) \]
+(c) \textit{If f is convex, nondecreasing, and positive, and g is concave, nonincreasing, and positive, then f/g is convex.}\\
+$\dfrac{1}{g}$ is positive convex and nondecreasing. According to (a) $f.\dfrac{1}{g}$ is convex.
+\end{exercise}
+
+\begin{exercise}[3.36 - Conjugate functions]
+(a) Max function. $f(x)=\max_{i=1,...,n}x_i$ on $\R^n$
+\[f^*(y)=\sup_{x=(x_1,...,x_n)^T\in\R^n}(y^Tx-\max_{1\leq i\leq n}x_i)\]
+First, let us establish the domain of $f^*$:\\
+- If $y$ has a strictly negative component $y_j<0$ then for a vector $x=\alpha e_j$ with $\alpha<0$, the inner product $y^Tx=\alpha y_j$ tends towards $+\infty$ as $\alpha$ decreases.\\
+Hence the supremum is undefined.\\
+- If $\1^Ty\neq1$, for $x=\alpha\1$, $y^Tx-\max_ix_i=\alpha(\1^Ty-1)$ which tends towards $+\infty$ as $\alpha$ goes to $+\infty$ (resp. $-\infty$) in case $\1^Ty-1>0$ (resp. $\1^Ty-1<0$).\\
+- If $y\succeq \0$ and $\1^Ty=1$, for all $x\in\R^n$:
+\[y^Tx\leq y^T(\max_ix_i\1)=\max_ix_i\]
+Hence $x^Ty-\max_ix_i\leq 0$.\\
+Furthermore, the upperbound is reached for $x=\0$, thus $f^*(y)=0$.\\
+The conjugate function is:
+\[f^*(y)=
+\begin{cases}
+0,\:y\succeq \0\: \wedge\:\1^Ty=1\\
++\infty,\:Otherwise
+\end{cases}\]
+(b) Sum of largest elements. $f(x)=\sum\limits_{i=1}^rx_{[i]},\:x\in\R^n$
+\[f^*(y)=\sup_{x\in\R^n}(y^Tx-\sum\limits_{i=1}^r|x|_{[i]})\]
+- If $y$ has a strictly negative component $y_j<0$ then for a vector $x=\alpha e_j$ with $\alpha<0$:
+\[y^Tx-f(x)=\begin{cases}
+\alpha y_j,\: if\: r<n\\
+\alpha(y_j-1)\:if\: r=n
+\end{cases}\]
+In both cases $y^Tx-f(x)$ tends toward $+\infty$ as $\alpha\to -\infty$.\\
+- If $y$ has a component larger than $1$, namely $y_j>1$ then for a vector $x=\alpha e_j$ with $\alpha>0$:
+\[y^Tx-f(x)=\alpha(y_j-1)\]
+which again tends towards $+\infty$ as $\alpha\to+\infty$.\\
+- If $\1^Ty\neq r$ then for a vector $x=\alpha\1$
+\[y^Tx-f(x)=\alpha\1^Ty-\alpha r=\alpha(\1^Ty-r)\]
+which tends toward $+\infty$ if $\alpha\to+\infty$ (in case $\1^Ty>r$), or as $\alpha\to-\infty$ (in case $\1^Ty<r$).\\
+- If $\0\preceq y\preceq \1$ and $\1^Ty=r$:
+\[y^Tx\leq\sum\limits_{i=1}^rx_{[i]}\]
+With equality at $x=\0$, hence the conjugate function is:
+\[f^*(y)=
+\begin{cases}
+0,\:\0\preceq y\preceq \1\: \wedge\:\1^Ty=r\\
++\infty,\:Otherwise
+\end{cases}\]
+(c) Piecewise-linear function on $\R$. $f(x)=\max_{i=1,...,m}(a_ix+b_i)$.\\
+We assume that the scalars $a_i$ are sorted in increasing order ($a_1\leq...\leq a_m$) and that:
+\[\forall k=1...m,\:\exists x\in \R:\:f(x)=a_kx+b_k\]
+$f$ is piecwise linear, changing its slope from $a_k$ to $a_{k+1}$ at $c_k$ where $a_kc_k+b_k=a_{k+1}c_k+b_{k+1}$ i.e $c_k=-\frac{b_{k+1}-b_k}{a_{k+1}-a_k}$\\
+We have:
+\[f^*(y)=\sup_x(xy-\max_{i=1...m}(a_ix+b_i))\]
+- If $y\not\in[a_1,a_m]$, $xy-\max_{i=1...m}(a_ix+b_i)$ goes to $+\infty$ as $x\to+\infty$ if $y>a_m$ or as $x\to-\infty$ if $y<a_1$.\\
+- If $y\in [a_i,a_{i+1}],\:i=1,...(m-1)$:\\
+For $x\in[c_k,c_{k+1}]:\:f(x)=a_{k+1}x+b_{k+1}$ thus:
+\[f^*(y)=\max_k\sup_{x\in[c_k,c_{k+1}]}x(y-a_{k+1})-b_{k+1}\]
+Depending on the sign of the factor $(y-a_{k+1})$ we will have:
+\[f^*(y)=\max\big(\max_{k\leq i-1}c_{k+1}(y-a_{k+1})-b_{k+1},\max_{k\geq i}c_k(y-a_{k+1})-b_{k+1}\big)=c_i(y-a_i)-b_i\]
+Hence:
+\[f^*(y)=\begin{cases}
+-\frac{b_{i+1}-b_i}{a_{i+1}-a_i}(y-a_i)-b_i,\:if\:y\in[a_1,a_m]\:with\:i\text{ such that }y\in[a_i,a_{i+1}]\\
++\infty,\:if\:y\not\in[a_1,a_m]
+\end{cases}
+\]
+(d) Power function $f(x)=x^p$ on $\R_{++}$ where $p>1$\\
+\[f^*(y)=sup_{x\in\R_{++}}(xy-x^p)\]
+- If $(y\leq 0)$ $f^*(y)=0$ when $x\to 0^+$.\\
+- If $(y>0)$ the supremum is reached at $x^*=\left(\frac{y}{p}\right)^{\frac{1}{p-1}}$ with:
+\[f^*(y)=(p-1)\left(\frac{y}{p}\right)^{\frac{p}{p-1}}\]
+Therefore:
+\[f^*(y)=\begin{cases}
+0,\:y\leq 0.\\
+(p-1)\left(\frac{y}{p}\right)^{\frac{p}{p-1}},\:y>0.
+\end{cases}
+\]
+(d') Power function $f(x)=x^p$ on $\R_{++}$ where $p<0$\\
+- If $(y>0)$ $f^*(y)=+\infty$ as $x\to+\infty$\\
+- If $(y\leq 0)$ the supremum is reached at $x^*=-\left(-\frac{y}{p}\right)^{\frac{1}{p-1}}$ with:
+\[f^*(y)=(1-p)\left(-\frac{y}{p}\right)^{\frac{p}{p-1}}\]
+Therefore:
+\[f^*(y)=\begin{cases}
+(1-p)\left(-\frac{y}{p}\right)^{\frac{p}{p-1}},\:y\leq0.\\
++\infty,\:y>0.
+\end{cases}
+\]
+(e) Negative geometric mean $f(x)=-(\prod_{i=1..n}x_i)^{1/n}$ on $\R^n_{++}$ (we will assume $n\geq 2)$\\
+- If $y$ has a strictly positive component $y_j>0$ then for $x=\alpha e_j+\1$ we will have:\[
+x^Ty+(\prod_{i=1..n}x_i)^{1/n}=\sum_{i\neq j}y_i+(\alpha+1)y_k+(1+\alpha)^{1/n}\]
+which tends towards $+\infty$ as $\alpha\to+\infty$.\\
+- If $\left(\prod_i(-y_i)\right)^{1/n}<\frac{1}{n}$ we will choose the vector $x$ such that $x_i=-\frac{\alpha}{y_i}$ for which:
+\[
+\begin{split}
+x^Ty+(\prod_{i=1..n}x_i)^{1/n}&=-n\alpha+\frac{\alpha^n}{(\prod_{i=1..n}(-y_i))^{1/n}}\\
+&\geq n(\alpha^n-\alpha)\\
+&\xrightarrow[\alpha\to+\infty]{}+\infty.
+\end{split}\]
+- If $\left(\prod_i(-y_i)\right)^{1/n}>\frac{1}{n}$ for the same vector $x$, $x_i=-\frac{\alpha}{y_i}$:
+\[
+\begin{split}
+x^Ty+(\prod_{i=1..n}x_i)^{1/n}&=-n\alpha+\frac{\alpha^n}{(\prod_{i=1..n}(-y_i))^{1/n}}\\
+&\xrightarrow[\alpha\to+\infty]{}+\infty.
+\end{split}\]
+- If $y\preceq \0$ and $\left(\prod_i(-y_i)\right)^{1/n}=\frac{1}{n}$:\\
+For $x\in\R^n_{++}$, we use the AM-GM inequality:
+\[
+\begin{split}
+\frac{-x^Ty}{n}&\geq(\prod_{i=1..n}(-x_iy_i))^{1/n}\\
+&=(\prod_{i=1..n}x_i)^{1/n}(\prod_{i=1..n}(-y_i))^{1/n}\\
+&= \frac{1}{n}(\prod_{i=1..n}x_i)^{1/n}\\
+x^Ty&\leq f(x).
+\end{split}\]
+The AM-GM equality is satisfied for the vector $x$ such that $x_i\propto-\frac{1}{y_i}$\\
+Hence $f^*(y)=0$\\
+Therefore:
+\[f^*(y)=\begin{cases}
+0,\:if\:y\preceq \0\:\wedge\:\left(\prod_i(-y_i)\right)^{1/n}=\frac{1}{n}\\
++\infty\:otherwise
+\end{cases}
+\]
+For the case $n=1$:\[
+f^*(y)=\sup_{x\in\R_{++}}x(y+1)=\begin{cases}
++\infty,\:if\:y+1>0\\
+0,\:otherwise
+\end{cases}\]
+(f) Negative generalized logarithm for second-order cone:
+\[f(x,t)=-\log(t^2-x^Tx)\:\:on \:E=\{(x,t)\in\R^n\times\R\:|\:\|x\|_2<t\}\]
+\[f^*(y,s)=sup_{(x,t)\in E}((x,t)^T(y,s)-f(x,t))\]
+We derive the expression above $(A=(x,t)^T(y,s)-f(x,t))$ with respect to $x$ and $t$:
+\[\begin{split}
+\frac{\partial A}{\partial x_i}=0 & \iff x_i=\frac{1}{2}y_i(t^2-x^Tx)\\
+&\Rightarrow x^Tx=\frac{1}{4}(t^2-x^Tx)^2y^Ty\\
+&\Rightarrow t^2-x^Tx=2\frac{\|x\|}{\|y\|}
+\end{split}\]
+And for t:
+\[\frac{\partial A}{\partial t}=0\iff \frac{2t}{t^2-x^Tx}=-s\]
+The two conditions combined give us:
+\begin{equation}
+\label{cond}
+-\frac{t}{s}=\frac{\|x\|}{\|y\|}
+\end{equation}
+Which we rewrite as follows:
+\[t=\frac{2s}{s^2-y^Ty},\:x=\frac{2}{s^2-y^Ty}y\]
+\textbf{The domain of $f^*$:}\\
+(\ref{cond}) implies that $\|y\|<-s$, $s<0$ for $(x,t)\in E$.\\
+- If $s>0$: we consider $(x,t)=(\0,\alpha)$, $\alpha>0$ then:
+\[x^Ty+ts-log(t^2-x^Tx)=\alpha s-2\log(\alpha)\xrightarrow[\alpha\to+\infty]{}+\infty\]
+- If $\|y\|\geq -s,\:s<0$ we choose the vector $x=\alpha y$, $t=\alpha(\|x\|+1)$ for a scalar $\alpha>1$:
+\[
+y^Tx+ts =\alpha y^Ty+\alpha s(\alpha\|y\|+1)\geq \alpha (y^Ty-s^2) \xrightarrow[\alpha \to+\infty]{}+\infty
+\]
+- If $\|y\|<-s$ and $s<0$ then we have shown that the supremum is reached at:
+\[t=\frac{2s}{s^2-y^Ty},\:x=\frac{2}{s^2-y^Ty}y\]
+Hence:
+\[
+f^*(y,s)=
+\begin{cases}
+-2+\log(4)-\log(s^2-y^Ty),\:\|y\|<-s\:\wedge\: s<0\\
++\infty,\:otherwise
+\end{cases}
+\]
+
+\end{exercise}
+\end{document}

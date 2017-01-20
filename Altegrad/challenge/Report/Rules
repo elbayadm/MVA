@@ -1,0 +1,17 @@
+Grading will be on 100 points total. Each team should deliver:
+
+a submission on the competition Kaggle webpage. 30 points will be allocated based on raw performance only, provided that the results are reproducible. That is, using only your code and the data provided on the competition page, the jury should be able to train your final model and use it to generate the predictions you submitted for scoring.
+a zipped folder including:
+a report as a .pdf file (see details below). Should be 3 pages in length, cover page excluded. Please ensure that both your real name(s) and the name of your Kaggle team appear on the cover page.
+a folder named "code" containing all the scripts needed to reproduce your submission. Although Python is preferred, you are free to use any other language like R or Matlab.
+The 3-page report should include the following sections (in that order):
+
+feature engineering (40 points). Regardless of the performance achieved, intended to reward the research efforts, creativity and rigor put into feature engineering. Best submissions will capture both textual, graph-theoretical, and meta information available in the node_information.csv file. You are expected to:
+explain the motivation and intuition behind each feature. How did you come up with the feature (e.g., research paper)? What is it intended to capture?
+rigorously report your experiments about the impact of various combinations of features on predictive performance, and, depending on the classifier, how you tackled the task of feature selection.
+model tuning and comparison (20 points). Best submissions will:
+compare multiple classifiers (e.g., SVM, Random Forest, Boosting, logistic regression...),
+for each classifier, explain the procedure that was followed to tackle parameter tuning and prevent overfitting.
+Report and code completeness, organization and readability will be worth 10 points. Best submissions will (1) clearly deliver the solution, providing detailed explanations of each step, (2) provide clear, well organized and commented code, (3) refer to research papers.
+
+Finally, note that the testing set has been randomly partitioned into public and private. Scores on the leaderboard are based on the public set, but final scores (based on which grading will be performed) will be computed on the private set. This removes any incentive for overfitting the testing set.

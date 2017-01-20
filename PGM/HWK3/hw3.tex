@@ -1,0 +1,169 @@
+\documentclass[11pt]{article}
+\usepackage{algorithm2e,amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,graphicx,subfig,bbm,verbatim,float,microtype,multirow,array}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[left=2.5cm,right=2.5cm,top=3cm,bottom=3cm]{geometry}
+\usepackage[none]{hyphenat}
+\usepackage[justification=centering]{caption}
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf PGM - HW3}
+\cfoot{\thepage}
+\setlength{\parindent}{0cm}
+
+\title{[M2, MVA]\\ Probabilistic graphical models}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\0}{\mathbf{0}}
+\newcommand{\p}{\mathbb{P}}
+
+\renewcommand{\baselinestretch}{1.2}
+\newcolumntype{M}[1]{>{\raggedright}m{#1}}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Homework 3}\\
+\today
+\vspace{10pt}
+\end{center}
+
+\vspace{7pt}
+
+\section*{HMM implementation}
+\textbf{1.} After evaluating the forward/backward messages $\alpha,\beta\in \R^{T\times K}$ we compute the probabilities denoted $P_q$ and $P_{qq}$ defined as:
+\[P_q(t,i)=\p(q_t=i|\bar u_1....\bar u_T)=\frac{\alpha(t,i)\beta(t,i)}{\sum_{j=1}^K\alpha(t,j)\beta(t,j)}\]
+\[P_{qq}(i,j,t)=\p(q_t=i,q_{t+1}=j|\bar u_1....\bar u_T)=\frac{\alpha(t,i)\beta(t+1,j)A_{i,j}f_j(\bar u_{t+1})}{\p(\bar u_1,...,\bar u_T)}\]
+with $A$ the probability transition matrix $\in \R^{K\times K}$.
+
+And $f_i(x)$ is the density of the gaussian distribution corresponding to the $i^{th}$ state:
+\[\forall x\in\R^p,\:f_i(x)=\frac{1}{(2\pi)^{p/2}|\Sigma_i|^{1/2}}\exp\left[-\frac{1}{2}(x-\mu_i)^T\Sigma_i^{-1}(x-\mu_i)\right]\]
+\textbf{2.} Using the parameters learned in the previous homework with uniform initial probability $\pi$
+
+And: \[A=\frac{1}{6}\begin{pmatrix}3 &1 &1& 1\\1& 3& 1& 1\\1& 1& 3& 1\\1 &1 &1 &3\end{pmatrix}\]
+We compute the messages and get the following $P_q$ for the first 100 samples.
+\begin{figure}[H]
+    \centering
+    \includegraphics[trim={0 1.8cm 0 0 },clip=true, width=15cm]{images/q100.pdf}
+    \caption{Hidden variables probability t=1:100 on the test data}
+\end{figure}
+
+\textbf{3.} The log-likelihood of the model with parameters $\theta=(\pi,A,(\mu_i)_i,(\Sigma_i)_i)$ takes the value:
+\[\begin{split}
+l(\theta)&=\log\left(\p(q_1)\prod_{t=1}^{T-1}\p(q_{t+1}|q_t)\prod_{t=1}^T\p(\bar u_t|q_t)\right)\\
+&=\sum_{i=1}^K\delta(q_1=i)\log(\pi_i)+\sum_{t=1}^{T-1}\sum_{i,j=1}^K\delta(q_t=i,q_{t+1}=j)\log(A_{ij})\\
+&+\sum_{t=1}^T\sum_{i=1}^K\delta(q_t=i)\log(f_i(\bar u_t))\\
+\end{split}\]
+
+At the (E) step of the expectation-maximization algorithm, we substitute the terms $\delta$ with the probabilities evaluated with the messages $\alpha,\beta$. At the (M) step, the optimizaton problem is similar to the one seen in homework 2, the updates are as follows:
+\[\pi_i=P_q(1,i)\]
+\[A_{i,j}=\frac{\sum_{t=1}^T P_{qq}(i,j,t)}{\sum_{t=1}^T\sum_{j=1}^K P_{qq}(i,j,t)}\]
+\[\mu=P_q^TU\in\R^{K\times p},\phantom{ab}U\text{ being the matrix of rows }(u_t)_t\]
+\[\Sigma_i=\frac{\sum_{t=1}^TP_q(t,i)(\bar u_t-\mu_i)^T(\bar u_t-\mu_i)}{\sum_{t=1}^TP_q(t,i)}\]
+
+\textbf{5.} While training the HMM we keep track of the log-likelihoods on the training set as well as on the test set. We compare in the figure below two initializations: \texttt{-GM} initialized with the Gaussian mixture parameters of homework 2 and \texttt{-RI} a random initialization of $(\Sigma_i)_i, (\mu_i)_i$.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{images/ll.pdf}
+    \caption{log-likelihood evolutions on the train/test sets}
+\end{figure}
+
+\textbf{6. Comparison:}
+
+We note that with the GM initialization we're tuning the HMM model in only 5 iterations, a random initialization might take a longer time $\sim$ 25 iterations to converge, but still considerably few iterations compared to $\sim$ 75 for the gaussian mixture. Comparing the HMM model loglikelihood to the gaussian mixture likelihood doesn't make much sense since the assumptions are different as the data is considered i.i.d for the GM but with temporal structure in HMM.
+\begin{table}[H]
+\centering
+\begin{tabular}{|cc||c|}
+\hline
+&Train&Test\\
+\hline
+\hline
+Isotropic GM& -5.31& -5.29\\
+General GM& -4.66& -4.82\\
+HMM from GM& -3.80& -3.92\\
+HMM from rand& -3.80& -3.97\\
+\hline
+\end{tabular}
+\caption{Normalized log-likelihoods}
+\end{table}
+
+\textbf{7.} Given the observations $\{u_1,...,u_T\}$, the states $\{1,..K\}$, the transition matrix $A$ and the emission matrix $N$ (in this case gaussian probabilities).
+
+The outputs are: $V,P\in\R^{T\times K}$ the probabilities of the most likely path and the path itself $MAP$.
+\newpage
+\textbf{Viterbi pseudocode:}\\
+\begin{algorithm}[H]
+\DontPrintSemicolon
+{\large Initialization:}\\
+	\For{$k\in\{1...K\}$}{
+	$V_{1,k}=\p(u_1|q_1=k)\pi_k$\;
+	$P_{1,k}=0$\;
+	}
+{\large Main loop:}\\
+	\For{$t\in\{1...T\}$}{
+	\For{$k\in\{1...K\}$}{
+	$V_{t,k}=\max_{i\in\{1..K\}}\p(u_t|q_t=k)A_{i,k}V_{t-1,i}$\;
+	$P_{t,k}=\arg\max_{i\in\{1..K\}}\p(u_t|q_t=k)A_{i,k}V_{t-1,i}$\;
+	}}
+{\large Retrieve the path:}\\
+	$MAP_T=\arg\max_kV_{T,k}$\;
+	\For{$t\in\{T...2\}$}{
+	$MAP_{t-1}=P_{t,MAP_{t}}$\;
+	}
+\end{algorithm}
+
+\textbf{8.} We compute the most likely path of states with the Viterbi algorithm and classify the train data accordingly.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{images/viterbi_train.pdf} 
+    \caption{Viterbi Classification of the train set}
+\end{figure}
+
+
+\textbf{9.} We compute the marginal probability $\p(q_t|u_1,...,u_T)$ for each $t\in\{1..100\}$ based on the parameters learnt from the train set.
+\begin{figure}[H]
+    \centering
+    \includegraphics[trim={0 1.8cm 0 0 },clip=true, width=15cm]{images/q100_learn.pdf}
+    \caption{Hidden variables probability t=1:100 on the test data}
+\end{figure}
+
+\textbf{10.} We classify the test data using the previously computed marginal probabilities (figure \ref{marg}).
+\begin{figure}[H]
+    \centering
+    \subfloat[Marginal probabilities\label{marg}]{\includegraphics[width=8cm]{images/marginal_class.pdf}}
+    %\caption{Classification of the 100 first test observations}
+    \subfloat[Viterbi\label{vit}]{\includegraphics[width=8cm]{images/viterbi_test.pdf} 
+}
+\end{figure}
+
+\textbf{11.} We compute the most likely path of states with the Viterbi algorithm using the paramaters learned from the training set and classify test data accordingly (figure \ref{vit}).
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=10cm]{images/viterbi_test.pdf} 
+%     \caption{Viterbi Classification of the 100 test samples}
+% \end{figure}
+We note that the classification results with Viterbi's algorithm are exactly similar to the classification issued with marginal probabilities.
+
+\textbf{12.} For choosing the number of hidden states $K$ we can train different models and compare their likelihoods on a validation set. For K ranging from 2 to 7 we get the likelihoods shown in figure \ref{cv}. As we can see the appropriate choice is K=4 as it doesn't overfit the training set. Moreover, for $K>4$ the model gets more complex, with more iterations needed to converge, yet the training set likelihood has slightly plateaued.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{images/cv.pdf}
+    \caption{Cross-validation of K\label{cv}}
+\end{figure}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+K&2&3&4&5&6&7\\
+\hline
+Iterations&13  &  30 &   27  &  36    &47    &65\\
+\hline
+\end{tabular}
+\caption{Required iterations for tolerance = $10^{-10}$}
+
+\end{table}
+\end{document}

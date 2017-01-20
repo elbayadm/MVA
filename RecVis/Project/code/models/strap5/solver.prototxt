@@ -1,0 +1,22 @@
+# The train/test net protocol buffer definition
+net: "trainval.prototxt"
+
+test_iter: 100
+test_interval: 100
+test_initialization: false
+
+base_lr: 0.01
+lr_policy: "inv"
+power: 0.75
+gamma: 0.0001
+stepsize: 4000
+max_iter: 10000
+
+momentum: 0.95
+weight_decay: 0.00
+
+display: 100
+snapshot: 10000
+snapshot_prefix: "morpho_p1"
+solver_mode: GPU
+

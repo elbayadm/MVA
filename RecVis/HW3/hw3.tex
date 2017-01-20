@@ -1,0 +1,397 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,graphicx,subfig,bbm,verbatim,float,microtype,multirow,array}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[left=2.5cm,right=2.5cm,top=3cm,bottom=3cm]{geometry}
+\usepackage[none]{hyphenat}
+\usepackage[justification=centering]{caption}
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf RecVis- A3}
+\cfoot{\thepage}
+
+
+\title{[M2, MVA]\\ Object recognition and computer vision}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\0}{\mathbf{0}}
+\newcommand{\p}{\mathbb{P}}
+
+\renewcommand{\baselinestretch}{1.2}
+\newcolumntype{M}[1]{>{\raggedright}m{#1}}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Assignement 3}\\
+\today
+\vspace{10pt}
+\end{center}
+
+\vspace{7pt}
+
+\section*{Part 1: Training a neural network by back­ propagation}
+\subsection*{Stage A: Computing gradients of the loss with respect to network parameters}
+	\paragraph{QA-}
+		The model parameters are $W_o\in\R^{1\times h},\:B_o\in\R,\:W_i\in\R^{h\times 2}$ and $B_i\in\R^h$, with $h$ the number of hidden units.\\
+		Our input is $X\in\R^2$ and the output is $\bar Y=W_oH+B_o\in\R$, with $H=ReLU(W_iX+B_i)$\\
+		We are using the logistic loss:
+		\[s(Y,\bar Y(X))=\log(1+\exp(-Y.\bar Y(X)))\]
+		To compute the gradient we start with:
+		\[\frac{\partial s(Y,\bar Y(X))}{\partial \bar Y}=\frac{-Y\exp(-Y.\bar Y)}{1+\exp(-Y.\bar Y)}=-\frac{Y}{1+\exp(Y.\bar Y)}\]
+		And then:
+		\[\frac{\partial \bar Y(X)}{\partial W_o}=H^T,\:\frac{\partial \bar Y(X)}{\partial B_o}=1\]
+		\[\frac{\partial\bar Y(X)}{\partial W_i}=(W_o^T\odot \1[W_iX+B_i\succ\0_h]).X^T\]
+		\[\frac{\partial\bar Y(X)}{\partial B_i}=W_o^T\odot \1[W_iX+B_i\succ\0_h]\]
+		Where for a given vector $v\in\R^p$, $\1[v\succ \0_p]=(\1[v_1>0],...,\1[v_p>0])^T$ and $\odot$ denotes the elementwise multiplication.\\
+		Hence:
+		\[\frac{\partial s(Y,\bar Y(X))}{\partial W_o}=\frac{\partial s(Y,\bar Y(X))}{\partial \bar Y}.\frac{\partial \bar Y}{\partial W_0}=-\frac{Y}{1+\exp(Y.\bar Y)}.H^T\]
+		\[\frac{\partial s(Y,\bar Y(X))}{\partial B_o}=-\frac{Y}{1+\exp(Y.\bar Y)}\]
+		\[\frac{\partial s(Y,\bar Y(X))}{\partial W_i}=-\frac{Y}{1+\exp(Y.\bar Y)}.(W_o^T\odot \1[W_iX+B_i\succ\0]).X^T\]
+		\[\frac{\partial s(Y,\bar Y(X))}{\partial B_i}=-\frac{Y}{1+\exp(Y.\bar Y)}.W_o^T\odot \1[W_iX+B_i\succ\0]\]
+
+\subsection*{Stage B: Numerically verify the gradients}
+	\paragraph{QB1-}
+		To verify our analytically computed gradients, we will numerically compute the approximate derivative of the loss $s(\Theta)$ w.r to $\Theta_i$ using finite differencing:\\
+		Assuming $s$ is a scalar-valued function of a vector variable  $s:\R^p\to\R$
+		\[s(\Theta+\Delta\Theta)\approx s(\Theta)+\Delta\Theta^T.\nabla s(\Theta)=s(\Theta)+\sum_i\Delta\Theta_i\frac{\partial s(\Theta)}{\partial \Theta_i}\]
+		To retrive $\dfrac{\partial s(\Theta)}{\partial \Theta_i}$ we set $\Delta\Theta=\epsilon e_i$ where $(e_i)_{1\leq i\leq p}$ is the canonical basis of $\R^p$.\\
+		Hence: 
+		\[\frac{\partial s(\Theta)}{\partial \Theta_i}=\frac{s(\Theta+\epsilon e_i)-s(\Theta)}{\epsilon}\]
+		For more accurate verification we'll use:
+		\[\frac{\partial s(\Theta)}{\partial \Theta_i}=\frac{s(\Theta+\epsilon e_i)-s(\Theta-\epsilon e_i)}{2\epsilon}\]
+
+	\paragraph{QB2-}
+		For a randomly selected training example $\{X,Y\}$ we verify that the analytically computed gradients match the numerical ones and we compute the norm of their differences.
+		\verbatiminput{grad_verif.txt}
+\subsection*{Stage C: Training the network using backpropagation and experimenting with different parameters}
+	\paragraph{QC1-}
+		We train our neural network of 7 hidden units with a learning rate of .02. The resulting decision boundary is shown in figure (\ref{DB}) as well as the evolution of both training and validation errors in figures (\ref{tre},\ref{vale}). The final training error being $0\%$ reached starting from 72717 passes through the samples.
+		\begin{figure}[H]
+			\centering
+			\includegraphics[width=12cm]{images/DB.pdf}
+			\caption{The neural net's decision boundary\label{DB}}
+		\end{figure}
+		\begin{figure}[H]
+			\centering
+			\subfloat[Training error]{\label{tre}
+				\includegraphics[width=7cm]{images/tr_error.pdf}
+				}
+			\subfloat[Validation error]{\label{vale}
+			\includegraphics[width=7cm]{images/val_error.pdf}
+			}
+			\caption{Convergent case}
+		\end{figure}
+
+	\paragraph{QC2-}
+		We run the training of our neural network 5 times starting from random initialization of the parameters $\{W_o,B_o,W_i,B_i\}$.
+		The model did converge 4 out of 5 times at variant points (the limit being $100\times n_{samples}$ passes). In the divergent case: 
+		\begin{itemize}
+		\item Training error=7.30\%
+		\item Validation error=9.50\%
+		\end{itemize}
+		The resulting decision boundary is shown in figure (\ref{div})
+		\begin{figure}[H]
+			\centering
+			\subfloat[The NN's decision boundary \label{div}]{
+			\includegraphics[width=7cm]{images/div.pdf}
+			}
+			\subfloat[Training error]{
+			\includegraphics[width=7cm]{images/div_tr_err.pdf}
+			}
+			\caption{Divergent case}
+		\end{figure}
+	\paragraph{QC3-}
+		We change the learning rate of the model taking consecutively the values $\{2, 0.2, 0.02, 0.002\}$ and run each case three times with random parameters initialization. The table (\ref{sttl}) reports the statistics of each run\footnote{Increased maxiumum passes to $500\times n_{samples}$ for lrate=.002}.
+		\begin{figure}[H]
+			\centering
+			\caption{Decision boundaries}
+			\subfloat[lrate=2]{
+			\includegraphics[width=5.5cm]{images/DB2.pdf}
+			}
+			\subfloat[lrate=.2]{
+			\includegraphics[width=5.5cm]{images/DB02.pdf}
+			}
+			\subfloat[lrate=.002]{
+			\includegraphics[width=5.5cm]{images/DB0002.pdf}
+			}
+		\end{figure}
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|c|c|c|c|c|}
+			\hline
+			lrate & run & Training error & Validation error & status\\
+			\hline
+			\multirow{3}{*}{2} &$1^*$& 33.90\% & 36.50\% & Divergent\\
+							   &2& 36.00\% & 38.30\% & Divergent\\
+							   &3& 26.10\% & 26.70\% & Divergent\\
+			\hline
+			\multirow{3}{*}{.2} &1&  0\% & 0\% & CV iter=13804\\
+							    &2&  0\% & 0\% & CV iter=12937\\
+							    &$3^*$&  0\% & 0\% & CV iter=23085\\
+			\hline
+			\multirow{3}{*}{.02} &1& 7.50\% & 9.30\% & Divergent\\ 
+							     &2& 0\% & 0\% & CV iter=47271\\
+							     &3& 0\% & 0\% & CV iter=51425\\
+			\hline
+			\multirow{3}{*}{.002} &1& 8.20\% & 10.60\% & Divergent\\ 
+						          &2& 0\% & 0\% & CV iter=469957 \\
+						          &$3^*$& 0\% & 0\% & CV iter=286710 \\
+			\hline					     	
+			\end{tabular}
+			\caption{Different learning rates - statistics}\label{sttl}		    
+		\end{table}
+		\begin{figure}[H]
+		\caption{Training errors}
+			\centering
+			\subfloat[lrate=2]{\label{bounce}
+			\includegraphics[width=5.5cm]{images/tr_error2.pdf}
+			}
+			\subfloat[lrate=.2]{
+			\includegraphics[width=5.5cm]{images/tr_error02.pdf}
+			}
+			\subfloat[lrate=.002]{\label{low}
+			\includegraphics[width=5.5cm]{images/tr_error0002.pdf}
+			}
+		\end{figure}
+		For each lrate value (excpet the initial .02) we report an instance of the decision boundary and the training errors progress (the * run). In the case of $lrate=2$ the learning rate is too large to permit convergence as it keeps bouncing away from the min value (figure \ref{bounce}). When lrate is too small, the model (if convergent) takes too many iterations as the update towards is insignificant (figure \ref{low}).
+	\paragraph{QC4-}
+		We set the learning rate to .02 and change the number of hidden units $h\in\{1,2,5,7,10,100\}$. We run each setting three different times and report some of the results in table (\ref{stth}))
+			\begin{table}[H]
+			\centering
+			\begin{tabular}{|c|c|c|c|c|}
+			\hline
+			h & run & Training error & Validation error & status\\
+			\hline
+			\multirow{3}{*}{1} &1& 8.90\% & 10.50\% & Divergent\\
+							   &2& 8.30\% & 10.60\% & Divergent\\ 
+							   &$3^*$& 8.20\% & 10.7\% & Divergent\\
+			\hline
+			\multirow{3}{*}{2} &1&  7.80\% & 9.90\% & Divergent\\ 
+							    &2&  9.80\% & 10.80\% & Divergent\\ 
+							    &$3^*$&  8.30\% & 9.40\% & Divergent\\
+			\hline
+			\multirow{3}{*}{5} &1& 0\% & 0\% & CV iter=240895\\ 
+							     &2& 0\% & 0\% & CV iter=57120\\
+							     &$3^*$& 0\% & 0\% & CV iter=45832\\
+			\hline
+			\multirow{3}{*}{7} &1& 9\% & 7.70\% & Divergent\\ 
+						          &2& 0\% & 0\% & CV iter=63665 \\
+						          &3& 0\% & 0\% & CV iter=36509 \\
+			\hline
+			\multirow{3}{*}{10} &1& 0\% & 0\% & CV iter=60273\\ 
+						          &2& 0\% & 0\% & CV iter=51915 \\
+						          &$3^*$& 0\% & 0\% & CV iter=53605 \\
+			\hline	
+			\multirow{3}{*}{100} &1& 0\% & 0\% & CV iter=33767\\ 
+						          &2& 0\% & 0\% & CV iter=36513 \\
+						          &$3^*$& 0\% & 0\% & CV iter=41602 \\
+			\hline					     	
+			\end{tabular}
+			\caption{Different learning rates - statistics}\label{stth}		    
+		\end{table}
+		For each h value (excpet the initial 7) we report an instance of the decision boundary and the training errors progress (the * run)\\
+		When changing $h$ we notice that small hidden units models don't converge as they have little freedom degrees to differntiate the two-moons: in fact the decision boundary with $h=1$ is linear (figure \ref{lin}) and is quadratic with $h=2$ (figure \ref{quad}) . Starting from h=5, the models converge and reach the optimal value faster (in number of iterations) with larger $h$. Moreover, a high value of $h$ generates a smoother decision boundary.
+		
+		\begin{figure}[H]
+			\centering
+			\caption{Decision boundaries}
+			\subfloat[h=1]{\label{lin}
+			\includegraphics[width=5.5cm]{images/DB_h1.pdf}
+			}
+			\subfloat[h=2]{\label{quad}
+			\includegraphics[width=5.5cm]{images/DB_h2.pdf}
+			}
+			\subfloat[h=5]{
+			\includegraphics[width=5.5cm]{images/DB_h5.pdf}
+			}
+		\end{figure}
+		\begin{figure}[H]
+		\ContinuedFloat
+		\centering
+			\subfloat[h=10]{
+			\includegraphics[width=5.5cm]{images/DB_h10.pdf}
+			}
+			\subfloat[h=100]{
+			\includegraphics[width=5.5cm]{images/DB_h100.pdf}
+			}
+		\end{figure}
+		\begin{figure}[H]
+		\caption{Training errors}
+			\centering
+			\subfloat[h=1]{
+			\includegraphics[width=5.5cm]{images/tr_error_h1.pdf}
+			}
+			\subfloat[h=2]{
+			\includegraphics[width=5.5cm]{images/tr_error_h2.pdf}
+			}
+			\subfloat[h=5]{
+			\includegraphics[width=5.5cm]{images/tr_error_h5.pdf}
+			}
+		\end{figure}
+		\begin{figure}[H]
+		\ContinuedFloat
+		\centering
+			\subfloat[h=10]{
+			\includegraphics[width=5.5cm]{images/tr_error_h10.pdf}
+			}
+			\subfloat[h=100]{
+			\includegraphics[width=5.5cm]{images/tr_error_h100.pdf}
+			}
+		\end{figure}
+		
+\section*{Part 2: Image classification with CNN features}
+\subsection*{Stage A: Computing CNN features}
+	\paragraph{Q2A1-}
+		Reading an image and then normalizing it to fit the training images size given by \texttt{net.normalization.imageSize} is necessary to feed the neural net with the right input. We should also apply any pre-processing the training set has undergone, in this case the substraction of the mean image \texttt{net.normalization.averageImage}.
+	\paragraph{Q2A2-}
+		The loaded \texttt{net} structure contains 3 fields:
+		\begin{itemize}
+		\item\texttt{layers}: A list of 21 layers, each layer \texttt{net.layers\{k\}} is a structure storing the type of the layer \{conv, pool, relu,..\} and a reference name \{conv\%d, pool\%d,..\}. Each layer depending on its type contains the required implementation parameters: weights for the convolution layers, patch size and pooling method for spatial pooling layers, padding and stride for both...
+		\item\texttt{normalization}: Parameters necessary to pre-process the images as seen in Q2A1.
+		\item\texttt{classes}: a list of the classification categories, their names and their descriptions.
+		\end{itemize}
+		The output \texttt{res} is a list of 22 structures containing each the input of the corresponding layer. The 22th being the final output. it also contains the forward mode computation time and some empty fields, set to store the derivatives of the output w.r to the layer parameters.
+\subsection*{Stage B: Image classification using CNN features and linear SVM}
+	\paragraph{Q2B1-}
+		We train an SVM linear classifier as seen on \textit{Assignement 2} for each of the three categories \{Aeroplane, Motorbike, Person\}. The feature vectors are the outputs of the imagenet neural network. First, we only consider the final output \texttt{softmax} then we append \texttt{fc7} and \texttt{fc8} consecutively. We cross-validate the C-regularization parameter of the SVM classifier and report the precision­-recall and average precision of the tuned model. We also consider l1 and l2 feature normalization.
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|c|c|c|c|c|}
+			\hline
+			Category & Input & normalization & C & test AP \\
+			\hline
+			\multirow{9}{*}{Motorbike} &\multirow{3}{*}{Softmax}  &l1& 1 & 82.74\%\\
+							   									  &&l2& .1 & 86.31\%\\
+							   									  &&$\varnothing$& 1 & 82.74\%\\
+							   									  \cline{2-5}
+							   			&\multirow{3}{*}{Softmax + fc8}  &l1& 1000 & 93.70\%\\
+							   									         &&l2& 3 & 91.32\%\\
+							   									         &&$\varnothing$& .1 & 91.15\%\\
+							   									   \cline{2-5}
+							   		    &\multirow{3}{*}{Softmax + fc8 + fc7}  &l1& 1000 & 93.46\%\\
+							   									               &&l2& 1 & 90.34\%\\
+							   									               &&$\varnothing$& .1 & 90.33\%\\
+			\hline
+			\multirow{9}{*}{Aeroplane} & \multirow{3}{*}{Softmax}  &l1& .1 & 91.97\%\\
+							   									   &&l2& .1 & 91.78\%\\
+							   									   &&$\varnothing$& .1 & 91.97\%\\
+							   									   \cline{2-5}
+							   		   & \multirow{3}{*}{Softmax + fc8}  &l1& 1000 & 93.72\%\\
+							   									         &&l2& 3 & 92.15\%\\
+							   									         &&$\varnothing$& 3 & 90.82\%\\
+							   									    \cline{2-5}
+							   		   & \multirow{3}{*}{Softmax + fc8 + fc7}  &l1& 1000 & 93.51\%\\
+							   									               &&l2& 3 & 91.94\%\\
+							   									               &&$\varnothing$& .1 & 91.82\%\\
+			\hline
+			\multirow{9}{*}{Person} & \multirow{3}{*}{Softmax}  &l1& 3 & 83.18\%\\
+							   									&&l2& .1 & 84.28\%\\
+							   									&&$\varnothing$& 3 & 83.18\%\\
+							   								    \cline{2-5}
+							   		& \multirow{3}{*}{Softmax + fc8}  &l1& 1000 & 95.46\%\\
+							   									      &&l2& 10 & 93.29\%\\
+							   									      &&$\varnothing$& 3 & 93.23\%\\
+							   									\cline{2-5}
+							   		& \multirow{3}{*}{Softmax + fc8 + fc7}  &l1& 1000 & 95.47\%\\
+							   									            &&l2& 3 & 94.69\%\\
+							   									            &&$\varnothing$& 3 & 94.64\%\\
+			\hline
+			\end{tabular}
+			\caption{SVM with neural net outputs - statistics}		    
+		\end{table}
+		Feature normalization improves the model's performane up to 3 points, which is significant.\\
+		The cross validation is also important, especially that for a given class, different features or different normalization are optimally tuned with extremely distinct C-parameter (figure \ref{ctune}) ranging from .1 to 1000. A default C wouldn't perform very well in all settings.
+		\begin{figure}[H]
+			\caption{C-tuning\label{ctune}}
+			\centering
+			\subfloat[person, l2 , features= softmax + f8]{
+			\includegraphics[width=8cm]{images/SVM/tuning_person_l2_f2.pdf}
+			}
+			\subfloat[person, l2 , features= softmax + f8 + fc7]{
+			\includegraphics[width=8cm]{images/SVM/tuning_aeroplane_l2_f3.pdf}
+			}
+			\\
+			\subfloat[aeroplane, l1 , features= softmax + f8]{
+			\includegraphics[width=8cm]{images/SVM/tuning_aeroplane_l1_f2.pdf}
+			}
+			\subfloat[motorbike, l1 , features= softmax + f8 + fc7]{
+			\includegraphics[width=8cm]{images/SVM/tuning_motorbike_l1_f3.pdf}
+			}
+		\end{figure}
+		although the imagenet classification problem doesn't consider a \textit{person} category, the SVM on the neural network output seems to perform very well in all considered settings. For norm=l2 and features=softmax+fc8+fc7 we gete 36/36 correctly retrieved in the top 36 test images (figure \ref{top36}). To explain this performance we list in table (\ref{top10}) the output classes of the neural networks for the top 10 ranked images in the SVM classifier:
+
+		\begin{figure}[H]
+			\centering
+			\includegraphics[width=15cm]{images/SVM/top_person_l2_f3.pdf}
+			\caption{Top 36 - person catgeory - norm=l2 - features=softmax+fc7+fc8\label{top36}}
+		\end{figure}
+
+		\begin{table}[H]
+			\centering
+			\begin{tabular}{|>{\centering\arraybackslash}p{7cm} >{\centering\arraybackslash}p{7cm}|}
+			\hline
+			Class 1& Class 2\\
+			\hline
+			\input{top10_person_l2_f3.txt}
+			\end{tabular}
+			\caption{Neural network - top 2 probable classes for the top 10 SVM scored images\label{top10}}
+		\end{table}
+		Hence the net is implicitly trained to capture human presence through other classes such as \{groom,suit,skirt,pyjama...\} where $\p(person|class=1)$ is high.
+	\paragraph{Q2B2}
+		From  \textit{Assignement 2}, the top performances in every setting are reported in (table \ref{A2})
+		\begin{table}[H]
+			\centering
+			\caption{AP on test sets: \{VLAD, BoVW, FV\} vs NNet\label{A2}}
+			\begin{tabular}{|c|c|c|c|c|}
+			\cline{3-5}
+			\multicolumn{2}{c|}{} & aeroplane & motorbike & person\\
+			\hline
+			\multirow{4}{*}{Linear} & BoVW & 0.55 & 0.48 & 0.71\\
+			\cline{2-5}
+			&VLAD & \textbf{ \color{red}0.75} & 0.69 & 0.76\\
+			\cline{2-5}
+			&FV & 0.70 & \textbf{ \color{red}0.73} & \textbf{ \color{red}0.77}\\
+			\cline{2-5}
+			&NNet (l1,\{softmax+fc8+fc7\}) & \textbf{ \color{blue}0.93} & \textbf{ \color{blue}0.93} & \textbf{ \color{blue}0.95}\\
+			\hline
+			\end{tabular}
+		\end{table}
+	It's obvious from the results above that the neural network encoding outperforms the VLAD, BoVW and FV of \textit{Assignement 2} i.e that deep learning the features is more efficient that hand-designing them. Nonetheless, the model fails to classify some images shown below. Generally there are more FP than FN (Person: FN=149, FP=85, Motorbike: FN=29, FP=1, Aeroplane: FN=43, FP=2), we can presume that the co-existence of multiple classes in one image blurs the SVM output. We'll have to admit though that the misclassified images aren't trivial.
+	
+	\begin{figure}[H]
+		\caption{Aeroplane}
+			\centering
+			\subfloat[False positives (exhaustive)]{
+				\includegraphics[width=8cm]{images/FP_aeroplane_l1_f3.pdf}
+				}
+			\subfloat[False negatives ]{
+				\includegraphics[width=8cm]{images/FN_aeroplane_l1_f3.pdf}
+				}
+	\end{figure}
+	\begin{figure}[H]
+		\caption{Motorbike}
+			\centering
+			\subfloat[False positives (exhaustive) ]{
+				\includegraphics[width=8cm]{images/FP_motorbike_l1_f3.pdf}
+				}
+			\subfloat[False negatives ]{
+				\includegraphics[width=8cm]{images/FN_motorbike_l1_f3.pdf}
+				}
+	\end{figure}
+	\begin{figure}[H]
+		\caption{Person}
+			\centering
+			\subfloat[False positives ]{
+				\includegraphics[width=8cm]{images/FP_person_l1_f3.pdf}
+				}
+			\subfloat[False negatives ]{
+				\includegraphics[width=8cm]{images/FN_person_l1_f3.pdf}
+				}
+	\end{figure}
+\end{document}
+

@@ -1,0 +1,13 @@
+
+net: "trainval.prototxt"
+test_iter: 100
+test_interval: 1000
+base_lr: 0.00001
+momentum: 0.9
+weight_decay: 0.004
+lr_policy: "fixed"
+display: 200
+max_iter: 70000
+snapshot: 5000
+snapshot_prefix: "cifar10_full"
+solver_mode: GPU

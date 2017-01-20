@@ -1,0 +1,540 @@
+---
+title: |
+  | [MVA]
+  | Probabilistic graphical models
+  | Homework 2  
+author: "Maha ELBAYAD"
+date: "11 November 2015"
+header-includes:
+   - \usepackage{multicol,amsthm,amsmath,centernot,subfig,booktabs}
+   - \newcommand{\bcol}{\begin{multicols}{2}}
+   - \newcommand{\ecol}{\end{multicols}}
+   - \newcommand{\Lfac}{\mathcal{L}}
+   - \newcommand{\1}{\mathbb{I}}
+   - \newcommand{\R}{\mathbb{R}}
+   - \newcommand{\0}{\mathbf{0}}
+   - \newcommand{\X}{\mathcal{X}}
+   - \newcommand{\indep}{\mathrel{\perp\mspace{-10mu}\perp}}
+   - \newcommand{\nindep}{\centernot{\indep}}
+output:
+  pdf_document:
+    highlight: pygments
+---
+```{r,include=F}
+library(pander)
+library(knitr)
+library(xtable)
+library(mixtools)
+colors=c('salmon','mediumseagreen','blue4','indianred4','darkgoldenrod1','deepskyblue','deeppink3')
+
+```
+
+#1-Entropy and mutual information
+**1.**Let $X$ be a discrete random variableon a finite space $\X$ with $|\X|=k$ and p the distribution of X.
+
+(a) $H(X)=-\sum_{x\in\X}p(x).\log p(x)\geq 0$ and $H(x)=0 \iff X=cst\:a.s$
+
+We have $\forall x\in\X,\:0\leq p(x)\leq 1$ thus $\forall x\in\X\: \log p(x)\leq 0$ which implies $H(X)\geq 0$.
+
+For the equality condition, if $X$ is deterministic i.e there exits $x^*\in\X$ such that $p(x^*)=1$, consequently $p(x)=0\:\forall x\in\X\{x^*\}$ then $H(X)=-p(x^*)\log p(x^*)=0$.
+
+Inversely, if $X$ is not constant a.s then $\exists x^*\in\X\:0<p(x^*)<1$ which means that $H(X)>0$.$\qed$
+
+(b) For q the uniform distribution on $\X$: $q(x)=\dfrac{1}{k}$, the Kullback Leibler Divergence between $p$ and $q$ is:
+$$D(p||q)=\sum_{x\in\X}p(x)\log\frac{p(x)}{q(x)}=\sum_{x\in\X}p(x)\log(kp(x))=\log k+H(X)$$
+
+(c) Let us prove that $D(p||q)\geq 0$ for any two distributions $p$ and $q$:
+\[
+\begin{split}
+-D(p||q)&=-\sum_{x\in\X}p(x)\log \frac{p(x)}{q(x)}\\
+&\leq \log\sum_{x\in\X}p(x).\frac{q(x)}{p(x)}\\
+&=\log(\sum_{x\in\X}q(x))=0
+\end{split}
+\]
+With equality if and only if $\frac{q(x)}{p(x)}=cst$ and since $\sum q(x)=\sum p(x)=1$ then we have equality iff $p=q$.
+
+Hence, $H(X)=-\log k+D(p||q)\geq -\log k$.
+
+
+**2.**  We consider a pair of r.v $(X_1,X_2)$ on $\X_1\times\X_2$ and we denote by $p_1$ and $p_2$ the marginal distributions of $X_1$ and $X_2$ and $p_{1,2}$ their joint distribution. We define the mutual information as follows:
+\[I(X_1,X_2)=\sum\limits_{(x_1,x_2)\in \X_1\times\X_2}p_{1,2}(x_1,x_2)\log\frac{p_{1,2}(x_1,x_2)}{p_1(x_1).p_2(x_2)}\]
+(a) We can write $I(X,Y)$ as $D(p_{1,2}(x_1,x_2)||p_1(x_1)p_2(x_2))$ which is nonnegative (equal to zero if and only if $p(x_1,x_2)=p(x_1).p(x_2)$)
+
+(b) We have:
+\[
+\begin{split}
+I(X_1,X_2)&=\sum\limits_{(x_1,x_2)\in \X_1\times\X_2}p_{1,2}(x_1,x_2)\log p_{1,2}(x_1,x_2)-\sum\limits_{(x_1,x_2)\in \X_1\times\X_2}p_{1,2}(x_1,x_2)\log p(x_1)\\
+&-\sum\limits_{(x_1,x_2)\in \X_1\times\X_2}p_{1,2}(x_1,x_2)\log p_2(x_2)\\
+&=-H(X,Y)-\sum_{x_1\in\X_1}\log p_1(x_1)\sum_{x_2\in\X_2}p_{1,2}(x_1,x_2)-\sum_{x_2\in\X_2}\log p_2(x_2)\sum_{x_1\in\X_1}p_{1,2}(x_1,x_2)\\
+&=-H(X,Y)-\sum_{x_1\in\X_1}p_1(x_1)\log p_1(x_1)-\sum_{x_2\in\X_2}p_2(x_2)\log p_2(x_2)\\
+&=-H(X,Y)+H(X)+H(Y)
+\end{split}\]
+(c) Finding the joint distribution of maximal entropy is equivalent to finding the joint distribution that minimizes the mutual information $I(X_1,X_2)$. From 2.a we deduce that the joint distribution of maximal entropy is $p_{1,2}=p_1p_2$ i.e $X_1$ and $X_2$ are independent.
+
+#2-Conditional independence and factorizations
+
+**1.** Let $X$,$Y$ and $Z$ be three random variables. Suppose $X\indep Y|Z$ then for $(y,z)$ such that $p(y,z)>0$:
+\[\begin{split}
+p(x|y,z)&=\dfrac{p(x,y,z)}{p(y,z)}=\dfrac{p(x,y|z)p(z)}{p(y,z)}\\
+&=\dfrac{p(x|z)p(y|z)p(z)}{p(y,z)}\\
+&=\dfrac{p(x|z)p(y|z)}{p(y|z)}=p(x|z)
+\end{split}\]
+Conversely, suppose we have $(\forall (y,z)\:s.t\:p(y,z)>0)\phantom{abc}p(x|y,z)=p(x|z)$ then for a pair $(y,z)$ such that $p(y,z)>0$:
+\[\begin{split}
+p(x,y|z)&=\dfrac{p(x,y,z)}{p(z)}=\dfrac{p(x|y,z)p(y,z)}{p(z)}\\
+&=\dfrac{p(x|z)p(y,z)}{p(z)}=p(x|z)p(y|z)
+\end{split}\]
+And if $p(y,z)=0$
+then $p(x,y|z)=0=p(y|z)$ hence $p(x,y|z)=p(x|z)p(y|z)$.
+
+In both cases, we end up with $X\indep Y|Z$
+
+**2.** Generally for $p\in \Lfac(G)$ we would have $X\nindep Y|T$. In fact, the only path from $X$ to $Y$ in the symmetrized grpah is $X\rightarrow Z\leftarrow Y$ which is unblocked since $Z$ is a parent of $T$.
+
+#3-Distributions factorizing in a graph
+**1.** Let $(i\to j)$ be a covered edge on a DAG $G=(V,E)$ i.e $\pi_j=\pi_i\cup\{i\}$ and let us consider the grpah $G'=(V,E')$ where $E'=E\backslash\{i\to j\}\cup\{j\to i\}$.
+
+We have $\pi_i^{G'}=\pi_i\cup\{j\}$ and $\pi_j^{G'}=\pi_i$. And if $G'$ is a DAG then:
+\[\begin{split}
+p\in\Lfac (G)&\iff p(x)=\prod_{k\in V}p(x_k|x_{\pi_k})=\prod_{k\in V\backslash\{i,j\}}p(x_k|x_{\pi_k})p(x_i|x_{\pi_i})p(x_j|x_{\pi_j})\\
+&\iff p(x)=\prod_{k\in V\backslash\{i,j\}}p(x_k|x_{\pi_k}).\dfrac{p(x_i,x_{\pi_i})}{p(x_{\pi_i})}\dfrac{p(x_j,x_i,x_{\pi_i})}{p(x_i,x_{\pi_i})}\\
+&\iff p(x)=\prod_{k\in V\backslash\{i,j\}}p(x_k|x_{\pi_k}).\dfrac{p(x_j,x_i,x_{\pi_i})}{p(x_{\pi_i})}\\
+&\iff p(x)=\prod_{k\in V\backslash\{i,j\}}p(x_k|x_{\pi_k}).\dfrac{p(x_j,x_i,x_{\pi_i})}{p(x_{\pi_i})}\dfrac{p(x_j,x_{\pi_i})}{p(x_j,x_{\pi_i})}\\
+&\iff p(x)=\prod_{k\in V\backslash\{i,j\}}p(x_k|x_{\pi_k}).p(x_i|x_{\pi_i\cup j})p(x_j|x_{\pi_i})\\
+&\iff p\in\Lfac (G')
+\end{split}\]
+
+**2.** Let $G$ be a directed tree and $G'$ its corresponding undirected tree.
+Since $G$ is a tree then it's a DAG that doesn't contain any V-structure.
+
+$G'$ is equivalent to the symmetrized tree $\widetilde G=(V,\widetilde E)$ where $\widetilde E=\{(u,v),(v,u)\:|(u,v)\in E\}$
+
+From (Proposition 4.22 - Lecture 4) we conclude that $\Lfac(G)=\Lfac(\widetilde G)=\Lfac(G')$
+
+#4-Implementation - Gaussian mixtures
+##(a)
+```{r}
+kdata=as.matrix(read.table("data/EMGaussian.data",header=F,sep=' ',col.names=c('X','Y')));
+kmeans<- function(X,K,max_iter=300,tol=1e-5){
+  #X: data sample.
+  #K: Number of clusters
+  #max_iter: maximum number of iterations.
+  #tol: Convergence tolerance.
+  
+  #Initialization of the clusers centers:
+  centers=X[sample(nrow(X), K), ]
+  counts=rep(0,K)
+  sd=rep(0,K)
+  initials=centers
+  distances=matrix(rep(0,nrow(X)*K),nc=K)
+  iter=1
+  delta=+Inf
+  distortion=rep(NaN,max_iter)
+  while(iter < max_iter && delta>tol){
+  #Affectation
+  for (c in 1:K){
+    distances[,c]=apply(X,1,function(x) sum((x-centers[c,])^2))
+  }
+  affect=apply( distances, 1, which.min)
+  #Distortion measure:
+  distortion[iter]=0
+  for (c in 1:K){
+   distortion[iter]=distortion[iter]+sum(distances[,c]*(affect==c))
+  }
+  if(iter>1) delta=distortion[iter-1]-distortion[iter]
+  #update centers:
+  for (c in 1:K){
+    centers[c,]=colMeans(kdata[affect==c,])
+    
+  }
+  iter=iter+1
+  }
+  for (c in 1:K) counts[c]=sum(affect==c)
+  list(initials=initials,affect=affect,centers=centers,distortion=distortion,cv=iter-1,counts=counts)
+}
+```
+
+
+```{r,echo=FALSE}
+kmplot<-function(km,X,s=""){
+K=nrow(km$centers)
+plot(c(),xlim=range(X),ylim=range(X),
+     main=paste('Kmeans: K=',K,s),xlab='X',ylab='Y')
+for (k in 1:K){
+points(X[km$affect==k,],col=colors[k],pch=19,cex=.4)
+}
+points(km$centers,col='red',pch=10,cex=1.5,lwd=2)
+legend('topleft',legend=c('Centroids',paste('C',1:K,sep="")),cex=.7,pch=c(10,rep(19,K)),col=c('red',colors[1:K]))
+}
+```
+
+###Performance of k-means:
+For two different runs of kmeans yielding different results i.e converging to different local minimas of the distortion, we list the initial vs the final centroids and the distortion evolution until convergence. We then plot the different clustering results.
+
+```{r,echo=F,results='asis'}
+set.seed(17)
+tries=2
+km=list() 
+
+km[[1]]=kmeans(kdata,3)
+km[[2]]=kmeans(kdata,3)
+print(xtable(cbind(km[[1]]$initials,km[[1]]$centers)), file="tab1.tex", floating=FALSE)
+print(xtable(cbind(km[[2]]$initials,km[[2]]$centers)), file="tab2.tex", floating=FALSE)
+```
+
+\begin{table}[ht!]
+\centering
+\subfloat[Try 1]{\input{./tab1}}\quad
+\subfloat[Try 2]{\input{./tab2}}
+\caption{Initial || final centroids}
+\end{table} 
+
+```{r,echo=F,fig.height=4}
+plot(c(),xlim=c(1,12),ylim=c(1000,15000),xlab='iteration',ylab='Distortion')
+for (try in 1:tries){
+points(km[[try]]$distortion[1:km[[try]]$cv],type='o',pch=19,cex=.5,col=colors[try])
+abline(h=km[[try]]$distortion[km[[try]]$cv],col='gray30',lty=2)
+text(11.5,km[[try]]$distortion[km[[try]]$cv]+500,round(km[[try]]$distortion[km[[try]]$cv],3),cex = .8,col='gray30')
+}
+legend('topright',legend=paste('try',1:tries),col=colors[1:tries],pch=rep(19,tries),cex=.7)
+```
+
+```{r,echo=F,fig.height=4}
+par(mfrow=c(1,2))
+for (try in 1:2){
+kmplot(km[[try]],kdata,paste('\ntry ',try))
+}
+
+```
+
+##(b) EM-algrithm for Isotropic Gaussian mixture
+
+We consider a Gaussian mixture model in which the covariance matrices are proportional to the identity i.e $\Sigma_k=\sigma_k^2.I_d$.
+
+Let $(x_i,z_i)_{1\leq i\leq n}$ be a sample with $x_i\in \R^d$, $z_i\sim \mathcal M(1,p_1,...p_K)$ and $(x_i|z_i)\sim\mathcal N(\mu_j,\Sigma_j=\sigma^2_jI_p)$
+
+Using the summation rule and Bayes forumla we can write:
+\[p_\theta(z_i=k|x_i)=\frac{p_kf_k(x_i)}{\sum_{k'}p_{k'}f_{k'}(x_i)}=\tau_i^k(\theta)\]
+with:
+\[\begin{split}
+f_k(x)&=\frac{1}{|\Sigma_k|^{1/2}(2\pi)^{d/2}}\exp\left[-\frac{1}{2}(x-\mu_k)^T\Sigma_k^{-1}(x-\mu_k)\right]\\
+&=\frac{1}{(2\pi\sigma_k^2)^{d/2}}\exp\left[-\frac{1}{2\sigma_k^2}(x-\mu_k)^T(x-\mu_k)\right]
+\end{split}\]
+and $\theta=(p_1,...,p_K,\mu_1,...,\mu_K,\sigma_1^2,...,\sigma_K^2).$
+
+Our objective is to maximize the complete likelihood at iteration t:
+$$\begin{split}
+\ln p_\theta(X,Z)&=\sum\limits_{i=1}^n\log p_\theta(x_i,z_i)\\
+&=\sum_{i=1}^n\sum_{k=1}^K\left(z_i^k\log(p_{k,t})+z_i^k\log f_{k,t}(x_i)\right)
+\end{split}$$
+
+With the latent variables $z_i^k=1$ if $z_i=j$ and 0 otherwise.
+
+After the E-step we end up substituting $z_i^k$ by its expectation $\tau_i^k$.
+
+$$l(\theta)=\sum_{i=1}^n\sum_{k=1}^K\left(\tau_i^k\log(p_k)+\tau_i^k\left(-\frac{d}{2}\log(2\pi\sigma_k^2)-\frac{1}{2\sigma_k^2}(x_i-\mu_k)^T(x_i-\mu_k)\right)\right)$$
+Thus we'll solve the optimization problem: 
+
+$$
+\begin{aligned}
+& \underset{\theta}{\text{maximize}} & & l(\theta)  \\
+& \text{subject to} & & \sum_{k=1}^Kp_k=1\\
+& & & \sum_{k=1}^K \tau_i^k=1\:\forall i\in\{1,..,n\}
+\end{aligned}
+$$
+
+
+The optimiality condition w.r.t $\mathbf p=(p_1,...p_K)$ gives:
+$$
+\frac{\partial}{\partial \mathbf p}\left(l(\theta)+\lambda(1-\sum_{k=1}^Kp_k)\right)=0= \sum\limits_{i=1}^n\frac{\tau_i^k}{p_k}-\lambda
+$$
+Where $\lambda$ is a Lagrange multiplier.
+
+Summing over $k$ yields $\lambda=n$ and
+$$p_k=\frac{1}{n}\sum_{i=1}^n\tau_i^k$$
+
+Next, we maximize with regard to $\mu_k$ for each k:
+$$\frac{\partial l(\theta)}{\partial \mu_k}=0\propto\sum_{i=1}^n\tau_i^k(x_i-\mu_k)$$
+Hence: $$\mu_k=\dfrac{\sum_i\tau_i^kx_i}{\sum_i\tau_i^k}$$
+Similarly for $\sigma_k$:
+$$\frac{\partial l(\theta)}{\partial \sigma_k^2}=0\propto\sum_{i=1}^n\tau_i^k(-d\sigma_k^2+(x_i-\mu_k)^T(x_i-\mu_k))$$
+Hence:
+$$\sigma_k^2=\dfrac{\sum_i\tau_i^k(x_i-\mu_k)^T(x_i-\mu_k)}{d\sum_i\tau_i^k}$$
+
+
+###R-implementation:
+
+```{r}
+iso_gaussian<-function(x,mu,sigma){1/(sqrt(2*pi)*sigma)^length(x)*
+    exp(-1/2/sigma^2*t(x-mu)%*%(x-mu))}
+EMG_iso<-function(X,K,max_iter=300,tol=1e-5){
+  #X: data sample -  K: Number of gaussians - max_iter: maximum number of EM iterations.
+  #tol: Convergence tolerance.
+  
+  #Initialization with kmeans:
+  km=kmeans(X,K)
+  p=km$counts/nrow(X)
+  mu=km$centers
+  sigma=rep(max(var(X)),K) #Initializing with a large variance
+  
+  n=nrow(X)
+  d=ncol(X)
+  tau=matrix(nrow=K, ncol=n)
+
+  #Convergence criteria
+  ll=rep(0,max_iter)
+  delta=+Inf
+  #EM loop
+  iter=1
+  while(iter<max_iter && delta>tol){
+    #(E-step):
+    for(k in 1:K){
+      tau[k,]=as.matrix(apply(X,1,function(x) p[k]*iso_gaussian(x,mu[k,],sigma[k])))
+    }
+    tau=t(t(tau)/colSums(tau))
+    #(M-step):
+    p=rowMeans(tau)
+    mu=(tau%*%X)/rowSums(tau)
+    for(k in 1:K){
+      temp=rowSums(t(apply(X,1,function(x) x-mu[k,]))^2)
+      sigma[k]=sqrt(sum(tau[k,]*temp)/sum(tau[k,])/d)
+    }
+    
+    affect=apply(tau,2,which.max)
+    #Compute the log-likelihood:
+    for (k in 1:K) {
+      if(length(X[affect==k,])<d)
+        next
+      else{
+        if(length(X[affect==k,])==d)
+          ll[iter]=ll[iter]+p[k]*iso_gaussian(X[affect==k,],mu[k,],sigma[k])
+        else
+        ll[iter]=ll[iter]+sum(as.matrix(apply(X[affect==k,],1,function(x)
+        p[k]*iso_gaussian(x,mu[k,],sigma[k]))))
+      }
+    }
+    if(iter>1)
+      delta=abs(ll[iter]-ll[iter-1])
+    else
+      delta=+Inf
+    iter=iter+1
+    }
+  if(iter>=max_iter) warning('EM algorithm didn\'t converge')
+  list(p=p,sigma=sigma,mu=mu,likelihood=ll[1:iter-1],km=km,iter=iter-1,affect=affect)
+}
+
+```
+
+
+```{r, echo=FALSE}
+EMG_iso_plot<-function(EMG,X,affect,s=""){
+K=nrow(EMG$mu)
+plot(c(),xlim=range(X),ylim=range(X),
+     main=paste('Isotropic GM: K=',K,s),xlab='X',ylab='Y')
+for(k in 1:K){
+  points(X[affect==k,],col=colors[k],pch=19,cex=.4)
+  for(o in c(.1 ,.3 ,.7)){
+    temp=ellipse(mu=EMG$mu[k,], sigma=EMG$sigma[k]*diag(1,2),alpha=o,col="gray40",pch=19,cex=.4,lty=2)
+    text(t(temp[100,]),paste((1-o)*100,"%"),cex=.6,col='gray20')
+  }
+}
+points(EMG$mu,col='red',pch=10,cex=1.5,lwd=1.5)
+legend('topleft',legend=c('GM centroids',paste('C',1:K,sep="")),cex=.7,pch=c(10,rep(19,K)),col=c('red',colors[1:K]))
+}
+```
+
+### EM for Gaussian mixture results with K=4
+```{r, echo=F}
+set.seed(11)
+EMG3_iso=EMG_iso(kdata,4)
+print(EMG3_iso[1:3])
+```
+
+```{r, echo=F,fig.height=4.3,fig.width=8,fig.align='center'}
+
+par(mfrow=c(1,2))
+kmplot(EMG3_iso$km,kdata,'\nThe initialization k-means')
+EMG_iso_plot(EMG3_iso,kdata,EMG3_iso$affect,paste('\nIter=',EMG3_iso$iter))
+par(mfrow=c(1,1))
+plot(EMG3_iso$likelihood,xlab='iteration',ylab='log-likelihood',type='l',lwd=2,main='Log-likelihoog evolution -isotropic GM')
+abline(h=EMG3_iso$likelihood[EMG3_iso$iter],col='gray30',lty=2)
+text(EMG3_iso$iter/4,EMG3_iso$likelihood[EMG3_iso$iter]-.1,round(EMG3_iso$likelihood[EMG3_iso$iter],4),col='red')
+
+```
+
+##(c) EM-algrithm for General Gaussian mixture
+
+Following the same steps as in (b) we end up with similar results except for:
+$$\Sigma_k=\dfrac{\sum_i\tau_i^k(x_i-\mu_k)(x_i-\mu_k)^T}{\sum_i\tau_i^k}$$
+
+###R-implementation:
+
+```{r}
+gaussian<-function(x,mu,sigma){1/(sqrt(2*pi*det(sigma)))^length(x)*
+    exp(-1/2*t(x-mu)%*%ginv(sigma)%*%(x-mu))}
+EMG<-function(X,K,max_iter=300,tol=1e-5){
+  #X: data sample -  K: Number of gaussians - max_iter: maximum number of EM iterations.
+  #tol: Convergence tolerance.
+  
+  #Initialization with kmeans:
+  km=kmeans(X,K)
+  p=km$counts/nrow(X)
+  mu=km$centers
+  sigma=list()
+  for(k in 1:K)
+    sigma[[k]]=var(X) #Initializing with a large variance
+  
+  n=nrow(X)
+  d=ncol(X)
+  tau=matrix(nrow=K, ncol=n)
+  ll=rep(0,max_iter)
+
+  #Convergence criteria
+  delta=+Inf
+  #EM loop
+  iter=1
+  while(iter<max_iter && delta>tol){
+    #(E-step):
+    for(k in 1:K){
+      tau[k,]=as.matrix(apply(X,1,function(x) p[k]*gaussian(x,mu[k,],sigma[[k]])))
+    }
+    tau=t(t(tau)/colSums(tau))
+    #(M-step):
+    p=rowMeans(tau)
+    mu=(tau%*%X)/rowSums(tau)
+    for(k in 1:K){
+      temp=t(apply(X,1,function(x) x-mu[k,]))
+      sigma[[k]]=(t(temp)%*%(tau[k,]*temp))/sum(tau[k,])
+    }
+    affect=apply(tau,2,which.max)
+    #Compute the log-likelihood:
+    for (k in 1:K) {
+      ll[iter]=ll[iter]+sum(as.matrix(apply(X[affect==k,],1,function(x)
+        p[k]*gaussian(x,mu[k,],sigma[[k]]))))
+      }
+    if(iter>1)
+      delta=abs(ll[iter]-ll[iter-1])
+    else
+      delta=+Inf
+    iter=iter+1
+
+    }
+  if(iter>=max_iter) warning('EM algorithm didn\'t converge')
+  list(p=p,sigma=sigma,mu=mu,likelihood=ll[1:iter-1],km=km,iter=iter-1,affect=affect)
+}
+
+```
+
+```{r, echo=FALSE}
+EMGplot<-function(EMG,X,affect,s=""){
+K=nrow(EMG$mu)
+plot(c(),xlim=range(X),ylim=range(X),
+     main=paste('Generalized GM: K=',K,s),xlab='X',ylab='Y')
+for(k in 1:K){
+  points(X[affect==k,],col=colors[k],pch=19,cex=.4)
+  for(o in c(.1 ,.3 ,.7)){
+    temp=ellipse(mu=EMG$mu[k,], sigma=EMG$sigma[[k]],alpha=o,col="gray40",pch=19,cex=.4,lty=2)
+    text(t(temp[100,]),paste((1-o)*100,"%"),cex=.6,col='gray20')
+  }
+}
+points(EMG$mu,col='red',pch=10,cex=1.5,lwd=1.5)
+legend('topleft',legend=c('GM centroids',paste('C',1:K,sep="")),cex=.7,pch=c(10,rep(19,K)),col=c('red',colors[1:K]))
+}
+```
+
+### EM for Gaussian mixture results with K=4
+
+```{r, echo=F}
+set.seed(11)
+EMG3=EMG(kdata,4)
+print(EMG3[1:3])
+```
+
+```{r, echo=F,fig.align='center',fig.height=4}
+par(mfrow=c(1,2))
+EMGplot(EMG3,kdata,EMG3$affect)
+
+plot(EMG3$likelihood,xlab='iteration',ylab='log-likelihood',type='l',lwd=2,main='Log-likelihoog evolution -GM')
+abline(h=EMG3$likelihood[EMG3$iter],col='gray30',lty=2)
+text(EMG3$iter/4,EMG3$likelihood[EMG3$iter]-.1,round(EMG3$likelihood[EMG3$iter],4),col='red')
+
+```
+
+##(d) Comparison of the mixture models:
+
+```{r,echo=F}
+ll_EMG<-function(X,EMG){
+  n=nrow(X)
+  K=nrow(EMG$mu)
+  tau=matrix(nrow=K, ncol=n)
+  mu=EMG$mu
+  p=EMG$p
+  sigma=EMG$sigma
+  for(k in 1:K){
+      tau[k,]=as.matrix(apply(X,1,function(x) p[k]*gaussian(x,mu[k,],sigma[[k]])))
+    }
+  tau=t(t(tau)/colSums(tau))  
+  affect=apply(tau,2,which.max)
+  ll=0
+  for (k in 1:K) {
+    ll=ll+sum(as.matrix(apply(X[affect==k,],1,function(x)
+        p[k]*gaussian(x,mu[k,],sigma[[k]]))))
+  }
+  list(ll=ll,affect=affect)
+  }
+
+ll_isoEMG<-function(X,EMG){
+  n=nrow(X)
+  K=nrow(EMG$mu)
+  tau=matrix(nrow=K, ncol=n)
+  mu=EMG$mu
+  p=EMG$p
+  sigma=EMG$sigma
+  for(k in 1:K){
+      tau[k,]=as.matrix(apply(X,1,function(x) p[k]*iso_gaussian(x,mu[k,],sigma[k])))
+    }
+  tau=t(t(tau)/colSums(tau))  
+  affect=apply(tau,2,which.max)
+  ll=0
+  for (k in 1:K) {
+    ll=ll+sum(as.matrix(apply(X[affect==k,],1,function(x)
+        p[k]*iso_gaussian(x,mu[k,],sigma[k]))))
+  }
+  list(ll=ll,affect=affect)
+  }
+
+```
+
+We compute the log-likelihood of the two mixture models (K=4) on both the training set and the test set:
+```{r,echo=F}
+kdata_test=as.matrix(read.table("data/EMGaussian.test",header=F,sep=' ',col.names=c('X','Y')));
+ll_train_iso=round(EMG3_iso$likelihood[EMG3_iso$iter],3)
+test_iso=ll_isoEMG(kdata_test,EMG3_iso)
+ll_test_iso=round(test_iso$ll,3)
+ll_train=round(EMG3$likelihood[EMG3$iter],3)
+test=ll_EMG(kdata_test,EMG3)
+ll_test=round(test$ll,3)
+recap=matrix(nr=3,nc=3)
+recap[1,]=c("","Train","Test")
+recap[2,]=c("Isotropic GM",ll_train_iso,ll_test_iso)
+recap[3,]=c("GM",ll_train,ll_test)
+recap=xtable(recap)
+align(recap)= "c|c|c|c|"
+print(recap,include.rownames=F,include.colnames=FALSE, file="recap.tex", floating=F,booktabs=T, hline.after = c(0,1,3))
+```
+
+\begin{table}[ht!]
+\centering
+\input{./recap}
+\caption{Log-likelihoods - Train \& Test for the GM models}
+\end{table} 
+
+We note that the isotropic GM has low likelihood compared to the generalized GM. In fact with few degrees of freedom, the model couldn't capture the data very well. On the other hand the generalized GM is slighltly overfitting the training set especially when clustering with low K (K<5) since the ellipsoids will have eccentricities closer to 1 in order to cover the training points.
+
+
+```{r, echo=F,fig.align='center',fig.height=4}
+par(mfrow=c(1,2))
+EMGplot(EMG3,kdata_test,test$affect,'\nTest')
+EMG_iso_plot(EMG3_iso,kdata_test,test_iso$affect,'\nTest')
+
+```

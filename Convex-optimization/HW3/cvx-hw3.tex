@@ -1,0 +1,329 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,hyperref,fancyhdr,float,graphicx,subfig}
+\usepackage{microtype}
+\usepackage[scientific-notation=true]{siunitx}
+
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.6in}
+\addtolength{\topmargin}{-.3in}
+\setlength{\parindent}{0pt}
+
+\pagestyle{fancy}
+\lhead{Maha ELBAYAD}
+\rhead{\bf Convex optimization: Homework 3}
+\cfoot{\thepage}
+
+\newtheoremstyle{exo}%
+{\topsep}{\topsep}%
+{}{}%
+{\bfseries}{}%
+{\newline}%
+{\thmname{#1}\thmnumber{ #2}\thmnote{ #3}}
+\theoremstyle{exo}
+\newtheorem*{exercise}{Exercise}
+
+
+\title{[M2, MVA]\\ Convex Optimization, Algorithms and Applications}
+\author{Maha ELBAYAD\\ \href{mailto:maha.elbayad@student.ecp.fr}{\tt maha.elbayad@student.ecp.fr}}
+\date{}
+
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Symd}{\mathbf{S}^n_{++}}
+\newcommand{\Syms}{\mathbf{S}^n_{+}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\1}{\mathbf{1}}
+\newcommand{\0}{\mathbf{0}}
+
+\renewcommand{\baselinestretch}{1.2}
+
+\begin{document}
+\maketitle
+\vspace{-10pt}
+\begin{center}
+{\huge \bf Homework 3}\\
+\today
+\vspace{15pt}
+\end{center}
+
+\vspace{10pt}
+
+\section{Second order methods for dual problem}
+\subsection*{1. The dual of Lasso}
+Let us consider the LASSO problem
+\begin{equation}
+\tag{LASSO}
+\label{lasso}
+\underset{w}{\text{minimize}} \frac{1}{2}\|Xw-y\|_2^2+\lambda\|w\|_1
+\end{equation}
+where $w\in\R^d,X\in\R^{n\times d},y\in\R^n$ abd $\lambda>0$ the regularization parameter.
+
+We rewrite the problem as:
+\[\underset{w,v}{\text{minimize}} \frac{1}{2}\|Xw-y\|_2^2+\lambda\|v\|_1,\:\text{ subject to }w=v.\]
+For which Slater's condition is satisfied, thus the strong duality holds.
+
+In fact if we consider $u=[w,v]^T$, $\bar X=[X, \0_{n,d}]$, $A=[\0_{d,d},I_d]$ and $E=[I_d,-I_d]$ the problem can be transformed into the convex problem with affine equality contraint:
+\[\underset{u}{\text{minimize}} \frac{1}{2}\|\bar Xu-y\|_2^2+\lambda\|Au\|_1,\:\text{ subject to }Eu=\0.\]
+We consider the Lagrange multiplier $\mu$, the lagrangian is:
+\[\begin{split}
+L(w,v,\mu)&=\frac{1}{2}\|Xw-y\|_2^2+\lambda\|v\|_1+\mu^T(w-v)\\
+&=(\frac{1}{2}\|Xw-y\|+\mu^Tw)+(\lambda\|v\|_1-\mu^Tv)
+\end{split}\] 
+We minimize $L$ with respect to the two variables $w,v$:
+\[\nabla_w(\frac{1}{2}\|Xw-y\|+\mu^Tw)=\mu+X^TXw-X^Ty=\0\]
+Thus,
+\[\min_w(\frac{1}{2}\|Xw-y\|+\mu^Tw)=-\frac{1}{2}y^TXH(X^Ty-\mu)-\frac{1}{2}\mu^TH(X^Ty-\mu)+\frac{1}{2}y^Ty\]
+where $H=(X^TX)^{-1}\in\R^d$, and:
+\[\min_v(\lambda\|v\|_1-\mu^Tv)=
+\begin{cases}
+0\:if\:\|\mu\|_\infty \leq \lambda\\
+-\infty \:otherwise
+\end{cases}\]
+The dual problem would be:
+\begin{equation}
+\label{P1}
+\begin{aligned}
+& \underset{\mu}{\text{minimize}}& & \frac{1}{2}\mu^TH\mu-(HX^Ty)^T\mu \\
+& \text{subject to} & & \lambda \leq \mu_i\leq \lambda, \:i=1...m
+\end{aligned}
+\end{equation}
+Which is a quadratic problem in the form:
+\begin{equation}
+\label{QP}
+\tag{QP}
+\begin{aligned}
+& {\text{minimize}} & & v^TQv+p^Tv\\
+& \text{subject to} & & Av\preceq b
+\end{aligned}
+\end{equation}
+with $Q=H/2\in\mathbf{S}^d_{++}$, $p=-HX^Ty$, $b=\lambda\1_{2d}$ and $A=[I_d,-I_d]^T\in\R^{2d\times d}$ 
+\subsection*{2. Test}
+We test the impelmented log-barrier method on randomly generated samples, the results are shown in the figures below. In the current situation, the most appropritate choice of $\mu$ is 50 which, among the tested values $\{2,15,50,100\}$, requires the fewest iterations. 
+\begin{figure}[H]
+\centering
+\includegraphics[trim={3cm 0 0 0}, width=18cm]{images/Barrier_QP.pdf}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[trim={3cm 0 0 0}, width=18cm]{images/Barrier_QP_nt.pdf}
+\end{figure}
+
+\section{First order methods for primal problem}
+\subsection*{1. The sub-gradient descent algorithm for LASSO}
+To implement the function \texttt{subgrad} we use the gradient of the least-squares $\|Xw-y\|_2^2$ with a subgradient of the $l1$-norm:
+\[\partial l1(w)=\{g|\:\|g\|_\infty\leq 1,\:g^Tw=\|w\|_1\}\]
+We can simply take $g=sign(w)=\begin{cases}+1,\:w>0\\0,\:w=0\\-1,\:w<0\end{cases}$
+
+For a randomly genetated sample (\texttt{n=100, d=10; $\lambda$=10}) we plot the loss function values at each itearion and $f_{best}^{(k)}-p^*$ the best value found yet at iteration $k$ compared to the final best value.
+
+At each iteration we update:
+\[w^{(k+1)}=w^{(k)}-\alpha_k.g^{(k)}\] 
+
+\textbf{Constant step size:} $\alpha_k=h$
+
+\textbf{Constant step length:} $\alpha^{(k)}=h\|g^{(k)}\|_2$
+
+\textbf{Square summable but not summable} $\alpha^{(k)}=\dfrac{h}{k}$
+
+\textbf{Nonsummable diminishing} $\alpha^{(k)}=\dfrac{h}{\sqrt k}$
+\begin{figure}[H]
+\centering
+\includegraphics[trim={4cm 0 0 0},width=18cm]{images/sub_cst.pdf}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[trim={4cm 0 0 0},width=18cm]{images/sub_length.pdf}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[trim={4cm 0 0 0},width=18cm]{images/sub_sqs.pdf}
+
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[trim={4cm 0 0 0},width=18cm]{images/sub_diminish.pdf}
+\end{figure}
+\subsection*{2. The coordinate descent algorithm for the LASSO dual}
+We iterates over the coordinates (i) and update:
+\[\mu_i^{(k+1)}=\arg\min_{-\lambda\leq \mu_i\leq\lambda}\left[\frac{1}{2}\mu^TH\mu-(HX^Ty)^T\mu\right]\]
+\[\mu_j^{(k+1)}=\mu_j^{(k)},\:j\neq i\]
+We have \[(\nabla_{\mu}f)_i=H_i^T\mu-(HX^Ty)_i\]
+Thus:
+\[\mu_i=\frac{(HX^Ty)_i-H_{-i}^T\mu_{-i}}{H_{ii}}\]
+To satisfy the box constraint we truncate the computed $\mu_i$
+\[\mu_i=T_\lambda\left(\frac{(HX^Ty)_i-H_{-i}^T\mu_{-i}}{H_{ii}}\right),\:
+T_\lambda(x)=\begin{cases}
+					\lambda,\:if\:x>\lambda\\
+					-\lambda,\:if\:x<-\lambda\\
+					x,\:otherwise
+			 \end{cases}\]
+
+The convergence of the method is shown in the figure below.
+\begin{figure}[H]
+\centering
+\includegraphics[trim={4cm 0 0 0},width=18cm]{images/coord.pdf}
+\end{figure}
+We compare the CPU time/ Number of required iterations of the subgradient method and the coordinate descent at different precision levels for a sample $(n=100,d=10)$.
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+precision $\epsilon$ & \num{1e-3}  & \num{1e-6} & \num{1e-10} \\
+\hline
+Subgradient method($L2\backslash L1$)& 0.0009/13 & 0.0085/313& didn't converge \\
+Coordinate descent & 0.0121/8 & 0.0051/8 & 0.0038/8\\
+\hline
+\end{tabular}
+\end{table}
+The subgradient method seems more effective for low precision level whilst the coordinate method is more robust with very high precision.
+
+\section{Proximal methods for primal problem}
+\textbf{1.} For the LASSO problem with $A\in\R^{n\times d}$: $f(x)=\frac{1}{2}\|Ax-y\|_2^2$ of hessian $\nabla^2f(x)=A^TA$. $f$ is strongly convex if there exists $m>0$ such that $X^TX\succeq m I$ i.e $A^TA$ is positive-definite. 
+
+This means $\forall w\in\R^d,\:x^TA^TAx=\0\iff x=\0$ and since $x^TA^TAx=\0$ implies $Ax=\0$ we must have $rank(A)=d$ and consequently $d\leq n$.
+
+If $f$ is strongly convex then the maximum eigenvalue of $\nabla f^2(x)$ is a continuous bounded function of $x$ which means
+\[\exists M>0,\:\forall x\in\R^d,\:\nabla^2f(x)\preceq MI\]
+The tightest choice of $m$ and $M$ would be 
+\[\begin{cases}
+m=\lambda_{min}(A^TA)\\
+M=\max \lambda_{max}(A^TA)
+\end{cases}\]
+
+If $n\ll d$ then the hessian is sigular and $f$ is not strongly convex. 
+
+\textbf{2.} For the indicator of a convex set $I_C$
+\[\text{prox}_{I_C,P}(x)=\arg\min_z\frac{P}{2}\|z-x\|_2^2+I_C(z)\]
+$\min_z\frac{P}{2}\|z-x\|_2^2+I_C(z)=\frac{P}{2}\min_z\|z-x\|_2^2$
+
+Thus $\text{prox}_{I_C,P}(x)=\frac{P}{2}.p_C(x)$ $\propto$ the projection of x on the convex set $C$. 
+
+For $h(x)=\|x\|_1$ 
+\[\text{prox}_{h,P}(x)=\arg\min_z\frac{P}{2}\|z-x\|_2^2+\|z\|_1\]
+The optimality condition is:
+\[\0\in P(z-x)+\partial(\|z\|_1)\]
+$h$ is separable so we can consider each element apart. for i, if $z_i\neq 0$ $\partial(|z_i|)=sign(z_i)$ therefore $z_i:=x_i-\frac{1}{P}.sign(z_i)$
+
+if $z_i<0$ then $x_i<-\frac{1}{P}<0$ and if $z_i>0$ then $x_i>\frac{1}{P}>0$ which means $sign(z_i)=sign(x_i)$ therefore $z_i=x_i-\frac{1}{P}sign(x_i)$ with $|x_i|>\frac{1}{P}$
+
+if $z_i=0$ the optimality condition becomes $\0\in -Px_i+[-1,1]$ i.e  $|x_i|<\frac{1}{P}$.
+\[\text{prox}_{h,P}(x)_i=
+\begin{cases}
+x_i-\frac{1}{P},\:if\:x_i>\frac{1}{P}\\
+0,\:if\:|x_i|<\frac{1}{P}\\
+x_i+\frac{1}{P},\:if\:x_i<-\frac{1}{P}\\
+\end{cases}\]
+
+\textbf{3.} For $z,x\in\R^d$
+\[f(z)=f(x)+\nabla f(x)^T(z-x)+\frac{1}{2}(z-x)^T\nabla^2f(y)(z-x)\]
+for some $y=tx+(1-t)z,\:t\in[0,1]$.
+
+Assuming the smoothness of $f$ ($\exists M>0\:\nabla^2f(x)\preceq MI$) we would have:
+\[f(z)\leq f(x)+\nabla f(x)^T(z-x)+\frac{m}{2}\|z-x\|_2^2\]
+Therefore:
+\[\phi(z)\leq g_{x,M}(z) \]
+holds for any $M>\lambda_{max}(\nabla^2f(x))$.
+
+The iteration scheme is:
+\[\begin{split}
+x_{t+1}&=\arg\min_z g_{x_t,M}(z)\\
+&=\arg\min_z \nabla f(x)^T(z-x_t)+\frac{M}{2}\|z-x_t\|_2^2+h(z)\\
+&=\arg\min_z \frac{M}{2}\|z-x_t+\frac{1}{M}\nabla f(x_t)\|_2^2+h(z)\\
+&=\text{prox}_{h,M}(x_t-\frac{1}{M}\nabla f(x_t))
+\end{split}\]
+For $h=0$ $\text{prox}_{0,M}=Id$ thus $x_{t+1}=x_t-\frac{1}{M}\nabla f(x_t)$ which is the gradient descent update.
+
+For $h=I_C$ $x_{t+1}=p_C(x_t-\frac{1}{M}\nabla f(x_t))$ the gradient projection update.
+
+\textbf{4.} We implement the proximal method for the LASSO problem and track the CPU time needed to converge as well as the number of iterations.
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+precision $\epsilon$ & \num{1e-3}  & \num{1e-6} & \num{1e-10} \\
+\hline
+Subgradient method($L2\backslash L1$)& 0.0009/13 & 0.0083/313& didn't converge \\
+Coordinate descent & 0.0121/80 & 0.0051/80 & 0.0038/80\\
+Proximal & 0.0158/114 & 0.0654/435 & 0.1311/869\\
+\hline
+\end{tabular}
+\end{table}
+The performance of the proximal method is illustrated on a random sample $(n=100, d=10, eps=1e-5)$
+\begin{figure}[H]
+\centering
+\includegraphics[trim={4cm 0 0 0},width=16cm]{images/proximal.pdf}
+\end{figure}
+\textbf{5.} We rewrite the update as:
+\[x_{t+1}=x_t-\frac{1}{M}F(x_t)\]
+with \[F(x_t)=M(x_t-prox_{h,M}(x_t-\frac{1}{M}\nabla f(x_t))\]
+From the definition of the proximal operator:
+\[u=prox_{h,M}(x)\iff M(x-u)\in \partial h(u)\]
+Therefore,
+\[M(x_t-\frac{1}{M}\nabla f(x_t)-prox(x_t-\frac{1}{M}\nabla f(x_t)))\in\partial h(prox(x_t-\frac{1}{M}\nabla f(x_t)))\]
+and
+\[
+\begin{split}
+F(x_t)=M(x_t-prox(x_t-\frac{1}{M}\nabla f(x_t)))&\in\nabla f(x_t)+\partial h(prox(x_t-\frac{1}{M}\nabla f(x_t)))\\
+&\in \nabla f(x_t)+\partial h(x_t-\frac{1}{M}F(x_t))\\
+\end{split}\]
+
+For this descent to be a point-fix algorithm we need to prove:
+\[F(x^*)=0\iff x^* \text{ minimizes }\phi(x)=f(x)+h(x)\]
+From the smoothness/strong convexity we get:
+\[f(x_t-\frac{1}{M}F(x_t))\leq f(x_t)-\frac{1}{M}\nabla f(x)^TF(x_t)+\frac{1}{2M}\|F(x_t)\|^2_2\]
+Thus from $F(x_t)-\nabla f(x_t)\in\partial h(x_t-\frac{1}{M}F(x_t))$, forall $z$:
+\[
+\begin{split}
+\phi(x_t-\frac{1}{M}F(x_t))&\leq f(z)+\nabla f(x)^T(x-z)-\frac{1}{M}\nabla f(x_t)^TF(x_t)+\frac{1}{2M}\|F(x_t)\|^2_2\\
+&+h(z)+(F(x_t)-\nabla f(x_t))^T(x-z-\frac{1}{M}F(x_t))\\
+&=\phi(z)+F(x_t)^T(x_t-z)-\frac{1}{2M}\|F(x_t)\|^2_2
+\end{split}\]
+In particular for $z=x_t$ and $z=x^*=\arg\min\phi(x)$
+\[\phi(x_{t+1})\leq \phi(x_t)-\frac{1}{2M}\|F(x_t)\|^2_2\]
+\[\begin{split}
+\phi(x_{t+1}) &\leq \phi(x^*)+F(x_t)^T(x_t-x^*)-\frac{1}{2M}\|F(x_t)\|^2_2\\
+&\leq \phi(x^*)+\frac{M}{2}\left(\|x_t-x^*\|_2^2-\|x_t-x^*-\frac{1}{M}F(x_t)\|_2^2\right)\\
+\phi(x_{t+1})-\phi(x^*)&\leq\frac{M}{2}(\|x_t-x^*\|_2^2-\|x_{t+1}-x^*\|_2^2)\\
+\end{split}\]
+Which means the sequence $(\phi(x_t))_t$ is non-increasing and we're getting closer to $x^*$.
+
+Then we sum over the $n$ past iterations:
+\[\begin{split}
+\sum_{t=1}^n(\phi(x_{t})-\phi(x^*))&\leq \sum_{t=1}^n \frac{M}{2}(\|x_{t-1}-x^*\|_2^2-\|x_{t}-x^*\|_2^2)\\
+&\leq \frac{M}{2}(\|x_0-x^*\|_2^2-\|x_n-x^*\|_2^2)\leq  \frac{M}{2}\|x_0-x^*\|_2^2
+\end{split}\]
+And
+\[\phi(x_n)-\phi(x^*)\leq \frac{1}{n}\sum_{t=1}^n(\phi(x_{t})-\phi(x^*))\leq \frac{M}{2n}\|x_0-x^*\|_2^2 \]
+Therefore the proximal gradient method is a point-fix algorithm that convergs in $\mathcal O(1/\epsilon)$.
+
+\textbf{6.} We implement the accelrated proximal method for the LASSO problem and track the CPU time needed to converge as well as the number of iterations.
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+precision $\epsilon$ & \num{1e-3}  & \num{1e-6} & \num{1e-10} \\
+\hline
+Subgradient method($L2\backslash L1$)& 0.0009/13 & 0.0083/313& didn't converge \\
+Coordinate descent & 0.0121/80 & 0.0051/80 & 0.0038/80\\
+Proximal & 0.0158/114 & 0.0654/435 & 0.1311/869\\
+Proximal acc & 0.0083/10 & 0.0061/10 & 0.0052/10\\
+\hline
+\end{tabular}
+\end{table}
+The fast convergence of the accelrated proximal method is shown in the figure below.
+\begin{figure}[H]
+\centering
+\includegraphics[trim={4cm 0 0 0},width=16cm]{images/proximal_acc.pdf}
+\end{figure}
+
+\end{document}
+
+
